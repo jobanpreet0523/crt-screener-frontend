@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CRT Screener</title>
+</head>
+
+<body>
+
+<h2>CRT Screener</h2>
+
+<select id="tf">
+  <option value="daily">Daily</option>
+  <option value="weekly">Weekly</option>
+  <option value="monthly">Monthly</option>
+</select>
+
+<br><br>
+
+<button onclick="scan()">Run Scan</button>
+
+<pre id="result"></pre>
+
+<script>
+function scan() {
+  const tf = document.getElementById("tf").value;
+
+  fetch("https://crt-screener-backend-rnoo.vercel.app/scan?tf=" + tf)
+
+    .then(response => response.json())
+    .then(data => {
+      document.getElementById("result").innerText =
+        JSON.stringify(data, null, 2);
+    })
+    .catch(error => {
+      document.getElementById("result").innerText = "Error connecting to backend";
+    });
+}
+</script>
+
+</body>
+</html>
