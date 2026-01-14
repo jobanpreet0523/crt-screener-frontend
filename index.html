@@ -28,8 +28,7 @@ function runScan() {
   fetch("https://crt-screener-backend-rnoo.vercel.app/scan?tf=" + tf)
     .then(res => res.json())
     .then(data => {
-      document.getElementById("result").innerText =
-        JSON.stringify(data, null, 2);
+      
     });
 }
 </script>
@@ -47,15 +46,25 @@ function runScan() {
 <pre id="result"></pre>
 
 <script>
-function scan() {
+function scan()<table border="1" cellpadding="8" style="margin-top:10px;">
+  <thead>
+    <tr>
+      <th>Symbol</th>
+      <th>Timeframe</th>
+      <th>Status</th>
+      <th>Chart</th>
+    </tr>
+  </thead>
+  <tbody id="result"></tbody>
+</table>
+ {
   const tf = document.getElementById("tf").value;
 
   fetch("https://crt-screener-backend-rnoo.vercel.app/scan?tf=" + tf)
 
     .then(response => response.json())
     .then(data => {
-      document.getElementById("result").innerText =
-        JSON.stringify(data, null, 2);
+      
     })
     .catch(error => {
       document.getElementById("result").innerText = "Error connecting to backend";
