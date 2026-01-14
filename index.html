@@ -68,7 +68,22 @@ function scan()<table border="1" cellpadding="8" style="margin-top:10px;">
     })
     .catch(error => {
       document.getElementById("result").innerText = "Error connecting to backend";
-    });
+    });const tbody = document.getElementById("result");
+
+tbody.innerHTML = `
+  <tr>
+    <td>XAUUSD</td>
+    <td>${data.timeframe}</td>
+    <td>${data.status}</td>
+    <td>
+      <a href="https://www.tradingview.com/chart/?symbol=FX:XAUUSD"
+         target="_blank">
+         📈 View
+      </a>
+    </td>
+  </tr>
+`;
+
 }
 </script>
 
