@@ -16,7 +16,24 @@
 
 <br><br>
 
-<button onclick="scan()">Run Scan</button>
+<button onclick=<script>
+function runScan() {
+  const tf = document.getElementById("timeframe").value;
+
+  // Change TradingView chart timeframe
+  document.getElementById("tvChart").src =
+    "https://www.tradingview.com/chart/?symbol=FX:XAUUSD&interval=" + tf;
+
+  // (Optional) backend call
+  fetch("https://crt-screener-backend-rnoo.vercel.app/scan?tf=" + tf)
+    .then(res => res.json())
+    .then(data => {
+      document.getElementById("result").innerText =
+        JSON.stringify(data, null, 2);
+    });
+}
+</script>
+
 <h3>Chart</h3>
 
 <iframe
