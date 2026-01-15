@@ -1,193 +1,149 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>CRT Screener</title>
+  <meta charset="UTF-8" />
+  <title>CRT Screener Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-<style>
-:root {
-  --dark: #111;
-  --blue: #0b5ed7;
-  --light: #f5f7fa;
-  --border: #ddd;
-}
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 20px;
+    }
 
-body {
-  margin: 0;
-  font-family: Segoe UI, Arial, sans-serif;
-  background: var(--light);
-}
+    h1 {
+      margin-bottom: 15px;
+    }
 
-header {
-  background: var(--dark);
-  color: white;
-  padding: 15px 20px;
-  font-size: 20px;
-  display: flex;
-  justify-content: space-between;
-}
+    .controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
 
-.badge {
-  background: var(--blue);
-  padding: 4px 10px;
-  border-radius: 20px;
-  font-size: 12px;
-}
+    select, input, button {
+      padding: 8px 10px;
+      font-size: 14px;
+    }
 
-.controls {
-  background: white;
-  padding: 12px 20px;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  border-bottom: 1px solid var(--border);
-}
+    button {
+      background: #0d6efd;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
 
-select, button {
-  padding: 8px 12px;
-  font-size: 14px;
-}
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: white;
+    }
 
-button {
-  background: var(--blue);
-  color: white;
-  border: none;
-  cursor: pointer;
-}
+    thead {
+      background: #111;
+      color: white;
+    }
 
-button:hover { opacity: .9; }
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
 
-.container { padding: 0 20px; }
+    tbody tr:hover {
+      background: #f1f1f1;
+    }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-  margin-top: 10px;
-}
-
-thead {
-  background: black;
-  color: white;
-  position: sticky;
-  top: 0;
-}
-
-th, td {
-  padding: 10px;
-  border-bottom: 1px solid var(--border);
-  font-size: 14px;
-}
-
-tbody tr:hover { background: #eef3ff; }
-
-.bull { color: green; font-weight: bold; }
-.bear { color: red; font-weight: bold; }
-
-.status {
-  text-align: center;
-  padding: 25px;
-  color: #666;
-}
-</style>
+    .msg {
+      padding: 20px;
+      text-align: center;
+      color: #666;
+    }
+  </style>
 </head>
 
 <body>
 
-<header>
-  CRT Screener Dashboard
-  <span class="badge" id="count">0</span>
-</header>
+  <h1>CRT Screener Dashboard</h1>
 
-<div class="controls">
-  <select id="tf">
-    <option value="daily">Daily</option>
-    <option value="weekly">Weekly</option>
-    <option value="monthly">Monthly</option>
-  </select>
+  <div class="controls">
+    <select id="tf">
+      <option value="daily">Daily</option>
+      <option value="weekly">Weekly</option>
+      <option value="monthly">Monthly</option>
+    </select>
 
-  <select id="filter">
-    <option value="all">All CRT</option>
-    <option value="bull">Bullish CRT</option>
-    <option value="bear">Bearish CRT</option>
-  </select>
+    <input id="search" placeholder="Search symbol..." />
 
-  <button onclick="scan()">Run Scan</button>
-</div>
+    <button onclick="runScan()">Run Scan</button>
+  </div>
 
-<div class="container">
-<table>
-<thead>
-<tr>
-  <th>Symbol</th>
-  <th>TF</th>
-  <th>CRT Type</th>
-  <th>Chart</th>
-</tr>
-</thead>
-
-<tbody id="rows">
-<tr>
-  <td colspan="4" class="status">Click Run Scan</td>
-</tr>
-</tbody>
-</table>
-</div>
+  <table>
+    <thead>
+      <tr>
+        <th>Symbol</th>
+        <th>Timeframe</th>
+        <th>CRT Type</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody">
+      <tr>
+        <td colspan="3" class="msg">
+          Click “Run Scan” to fetch data
+        </td>
+      </tr>
+    </tbody>
+  </table>
 
 <script>
-const API = "https://YOUR_BACKEND_URL";
+async function runScan() {
+  const tf = document.getElementById("tf").value;
+  const search = document.getElementById("search").value.toUpperCase();
+  const tbody = document.getElementById("tableBody");
 
-async function scan() {
-  const tf = tfSelect.value;
-  const filter = filterSelect.value;
-  rows.innerHTML = `<tr><td colspan="4" class="status">Scanning...</td></tr>`;
-  count.innerText = "…";
+  tbody.innerHTML = `<tr><td colspan="3" class="msg">Scanning...</td></tr>`;
 
   try {
-    const res = await fetch(`${API}/scan?tf=${tf}`);
+    const res = await fetch(
+      `https://YOUR-RENDER-URL/scan?tf=${tf}`
+    );
     const data = await res.json();
 
-    let results = data.results || [];
-
-    if (filter === "bull")
-      results = results.filter(r => r.type.toLowerCase().includes("bull"));
-
-    if (filter === "bear")
-      results = results.filter(r => r.type.toLowerCase().includes("bear"));
-
-    count.innerText = results.length;
-
-    if (results.length === 0) {
-      rows.innerHTML = `<tr><td colspan="4" class="status">No CRT found</td></tr>`;
+    if (!data.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="3" class="msg">
+            No CRT found for the selected timeframe.
+          </td>
+        </tr>`;
       return;
     }
 
-    rows.innerHTML = "";
-    results.forEach(r => {
-      const cls = r.type.toLowerCase().includes("bull") ? "bull" : "bear";
-      rows.innerHTML += `
-        <tr>
-          <td>${r.symbol}</td>
-          <td>${r.timeframe}</td>
-          <td class="${cls}">${r.type}</td>
-          <td>
-            <a target="_blank"
-               href="https://www.tradingview.com/chart/?symbol=${r.symbol}">
-              View
-            </a>
-          </td>
-        </tr>`;
-    });
+    tbody.innerHTML = "";
 
-  } catch {
-    rows.innerHTML = `<tr><td colspan="4" class="status">Backend error</td></tr>`;
+    data
+      .filter(d => !search || d.symbol.includes(search))
+      .forEach(d => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${d.symbol}</td>
+            <td>${d.timeframe}</td>
+            <td>${d.crt_type}</td>
+          </tr>`;
+      });
+
+  } catch (err) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="3" class="msg">
+          API Error – backend not responding
+        </td>
+      </tr>`;
+    console.error(err);
   }
 }
-
-const tfSelect = document.getElementById("tf");
-const filterSelect = document.getElementById("filter");
-const rows = document.getElementById("rows");
-const count = document.getElementById("count");
 </script>
 
 </body>
