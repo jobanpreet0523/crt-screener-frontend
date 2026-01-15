@@ -73,6 +73,18 @@
 <script>
 let tvWidget;
 
+const intervalMap = {
+  daily: "D",
+  weekly: "W",
+  monthly: "M"
+};
+
+const symbols = [
+  { name: "XAUUSD", tv: "OANDA:XAUUSD" },
+  { name: "XAGUSD", tv: "OANDA:XAGUSD" },
+  { name: "US500", tv: "OANDA:SPX500USD" }
+];
+
 function loadChart(symbol, interval) {
   if (tvWidget) tvWidget.remove();
 
@@ -91,21 +103,13 @@ function loadChart(symbol, interval) {
 
 function runScan() {
   const tf = document.getElementById("tf").value;
-
-  const intervalMap = {
-    daily: "D",
-    weekly: "W",
-    monthly: "M"
-  };
-
-  const symbols = [
-    { name: "XAUUSD", tv: "OANDA:XAUUSD" },
-    { name: "XAGUSD", tv: "OANDA:XAGUSD" },
-    { name: "US500", tv: "OANDA:SPX500USD" }
-  ];
-
+  const interval = intervalMap[tf];
   const tbody = document.getElementById("result");
+
   tbody.innerHTML = "";
+
+  // Load default chart
+  loadChart("OANDA:XAUUSD", interval);
 
   symbols.forEach(symbol => {
     fetch("https://crt-screener-backend-rnoo.vercel.app/scan?tf=" + tf)
@@ -118,7 +122,7 @@ function runScan() {
           <td>${data.timeframe}</td>
           <td>${data.status}</td>
           <td>
-            <button onclick="loadChart('${symbol.tv}', '${intervalMap[tf]}')">
+            <button onclick="loadChart('${symbol.tv}', '${interval}')">
               📈 View
             </button>
           </td>
