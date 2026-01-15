@@ -59,7 +59,7 @@ function loadChart(symbol, interval) {
     container_id: "tvChart"
   });
 }
-
+<script>
 function runScan() {
   const tf = document.getElementById("tf").value;
 
@@ -68,6 +68,39 @@ function runScan() {
     weekly: "W",
     monthly: "M"
   };
+
+  const symbols = [
+    { name: "XAUUSD", tv: "OANDA:XAUUSD" },
+    { name: "XAGUSD", tv: "OANDA:XAGUSD" },
+    { name: "US500", tv: "OANDA:SPX500USD" }
+  ];
+
+  const tbody = document.getElementById("result");
+  tbody.innerHTML = "";
+
+  symbols.forEach(symbol => {
+    fetch("https://crt-screener-backend-rnoo.vercel.app/scan?tf=" + tf)
+      .then(res => res.json())
+      .then(data => {
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+          <td>${symbol.name}</td>
+          <td>${data.timeframe}</td>
+          <td>${data.status}</td>
+          <td>
+            <button onclick="loadChart('${symbol.tv}', '${intervalMap[tf]}')">
+              📈 View
+            </button>
+          </td>
+        `;
+
+        tbody.appendChild(row);
+      });
+  });
+}
+</script>
+
 
   // Load chart
   loadChart("FOREXCOM:XAUUSD", intervalMap[tf]);
