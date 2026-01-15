@@ -29,15 +29,16 @@
       <th>Chart</th>
     </tr>
   </thead>
-  <tbody id="result">
-  </tbody>
+  <tbody id="result"></tbody>
 </table>
 
 <h3>Chart</h3>
 
 <div id="tvChart"></div>
 
+<!-- TradingView Library -->
 <script src="https://s3.tradingview.com/tv.js"></script>
+
 <script>
 let tvWidget;
 
@@ -58,24 +59,20 @@ function loadChart(symbol, interval) {
     container_id: "tvChart"
   });
 }
-</script>
 
-<script>
-<script>
 function runScan() {
   const tf = document.getElementById("tf").value;
 
-  // Convert timeframe for TradingView
   const intervalMap = {
     daily: "D",
     weekly: "W",
     monthly: "M"
   };
 
-  // Load TradingView chart
+  // Load chart
   loadChart("FX:XAUUSD", intervalMap[tf]);
 
-  // Call backend scan API
+  // Call backend
   fetch("https://crt-screener-backend-rnoo.vercel.app/scan?tf=" + tf)
     .then(res => res.json())
     .then(data => {
@@ -92,36 +89,6 @@ function runScan() {
       `;
     })
     .catch(() => {
-      alert("Backend not responding");
-    });
-}
-</script>
-
-  const tf = document.getElementById("tf").value;
-
-  // Update TradingView chart
-  document.getElementById("tvChart").src =
-    "https://www.tradingview.com/chart/?symbol=FX:XAUUSD&interval=" + tf;
-
-  // Call backend
-  fetch("https://crt-screener-backend-rnoo.vercel.app/scan?tf=" + tf)
-    .then(response => response.json())
-    .then(data => {
-      const tbody = document.getElementById("result");
-
-      tbody.innerHTML = `
-        <tr>
-          <td>XAUUSD</td>
-          <td>${data.timeframe}</td>
-          <td>${data.status}</td>
-          <td>
-            <a href="https://www.tradingview.com/chart/?symbol=FX:XAUUSD"
-               target="_blank">📈 View</a>
-          </td>
-        </tr>
-      `;
-    })
-    .catch(error => {
       document.getElementById("result").innerHTML =
         "<tr><td colspan='4'>Backend error</td></tr>";
     });
@@ -130,4 +97,3 @@ function runScan() {
 
 </body>
 </html>
-
