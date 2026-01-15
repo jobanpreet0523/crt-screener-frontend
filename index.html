@@ -2,126 +2,210 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>CRT Screener</title>
+  <title>CRT Screener Dashboard</title>
 
   <style>
     body {
       font-family: Arial, sans-serif;
-      margin: 20px;
+      margin: 0;
+      padding: 20px;
+      background: #f9fafb;
     }
 
     h1 {
       margin-bottom: 10px;
+      font-size: 24px;
     }
 
-    select, button {
-      padding: 6px 10px;
-      margin-right: 10px;
+    .controls {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    select, input {
+      padding: 8px 12px;
       font-size: 14px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      padding: 8px 14px;
+      cursor: pointer;
+      background: #0f4c81;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-weight: bold;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
+      margin-top: 15px;
+      background: white;
+      box-shadow: 0 0 5px rgba(0,0,0,0.05);
     }
 
     th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
+      padding: 10px 12px;
+      border-bottom: 1px solid #e1e4e8;
       text-align: center;
+      font-size: 14px;
     }
 
     th {
-      background: #222;
+      background: #111;
       color: #fff;
+      cursor: pointer;
+      position: relative;
     }
 
-    #chart {
+    th.sortable:hover {
+      background: #222;
+    }
+
+    tr:hover {
+      background: #f1f5f9;
+    }
+
+    .badge {
+      padding: 4px 8px;
+      border-radius: 3px;
+      color: white;
+      font-size: 13px;
+      font-weight: bold;
+    }
+
+    .continuation {
+      background: #1f8a1f;
+    }
+    .reversal {
+      background: #c0392b;
+    }
+
+    #chartFrame {
       margin-top: 30px;
       width: 100%;
       height: 500px;
+      border: 0;
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 20px;
+      font-size: 16px;
+      color: #555;
     }
   </style>
 </head>
 
 <body>
 
-  <h1>CRT Screener</h1>
+  <h1>CRT Screener Dashboard</h1>
 
-  <select id="timeframe">
-    <option value="daily">Daily</option>
-    <option value="weekly">Weekly</option>
-    <option value="monthly">Monthly</option>
-  </select>
+  <div class="controls">
+    <select id="timeframe">
+      <option value="daily">Daily</option>
+      <option value="weekly">Weekly</option>
+      <option value="monthly">Monthly</option>
+    </select>
 
-  <button onclick="runScan()">Run Scan</button>
+    <input type="text" id="search" placeholder="Search symbol..." />
 
-  <table>
+    <button onclick="runScan()">Run Scan</button>
+  </div>
+
+  <table id="resultsTable">
     <thead>
       <tr>
-        <th>Symbol</th>
-        <th>Timeframe</th>
-        <th>CRT Type</th>
+        <th class="sortable" onclick="sortTable(0)">Symbol</th>
+        <th class="sortable" onclick="sortTable(1)">Timeframe</th>
+        <th class="sortable" onclick="sortTable(2)">CRT Type</th>
         <th>Chart</th>
       </tr>
     </thead>
-    <tbody id="results"></tbody>
+    <tbody id="resultsBody"></tbody>
   </table>
 
-  <div id="chart"></div>
+  <div id="noResults" class="no-results" style="display:none;">
+    No CRT found for the selected timeframe.
+  </div>
+
+  <iframe id="chartFrame"></iframe>
 
   <script>
     const API_URL = "https://crt-screener-backend.onrender.com/scan";
+    let currentResults = [];
 
     async function runScan() {
       const tf = document.getElementById("timeframe").value;
-      const tbody = document.getElementById("results");
+      const tbody = document.getElementById("resultsBody");
+      const noResults = document.getElementById("noResults");
 
-      tbody.innerHTML = "<tr><td colspan='4'>Scanning...</td></tr>";
+      tbody.innerHTML = "";
+      noResults.style.display = "none";
 
-      try {
-        const res = await fetch(`${API_URL}?tf=${tf}`);
-        const data = await res.json();
+      const res = await fetch(`${API_URL}?tf=${tf}`);
+      const data = await res.json();
 
-        tbody.innerHTML = "";
+      currentResults = data.results || [];
 
-        if (data.results.length === 0) {
-          tbody.innerHTML = "<tr><td colspan='4'>No CRT Found</td></tr>";
-          return;
+      if (currentResults.length === 0) {
+        noResults.style.display = "block";
+        return;
+      }
+
+      displayResults(currentResults);
+    }
+
+    function displayResults(list) {
+      const tbody = document.getElementById("resultsBody");
+      tbody.innerHTML = "";
+
+      list.forEach(row => {
+        const tr = document.createElement("tr");
+
+        let typeBadge = "";
+        if (row.type === "OPTION_A_CONTINUATION") {
+          typeBadge = `<span class="badge continuation">Continuation</span>`;
+        }
+        if (row.type === "OPTION_B_REVERSAL") {
+          typeBadge = `<span class="badge reversal">Reversal</span>`;
         }
 
-        data.results.forEach(row => {
-          const tr = document.createElement("tr");
-
-          tr.innerHTML = `
-            <td>${row.symbol}</td>
-            <td>${row.timeframe}</td>
-            <td>${row.type}</td>
-            <td>
-              <button onclick="openChart('${row.symbol}')">View</button>
-            </td>
-          `;
-
-          tbody.appendChild(tr);
-        });
-
-      } catch (err) {
-        tbody.innerHTML = "<tr><td colspan='4'>Error loading data</td></tr>";
-      }
+        tr.innerHTML = `
+          <td>${row.symbol}</td>
+          <td>${row.timeframe}</td>
+          <td>${typeBadge}</td>
+          <td>
+            <button onclick="openChart('${row.symbol}')">View</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
     }
 
     function openChart(symbol) {
-      document.getElementById("chart").innerHTML = `
-        <iframe
-          src="https://www.tradingview.com/widgetembed/?symbol=${symbol}&interval=D"
-          width="100%"
-          height="500"
-          frameborder="0"
-          allowfullscreen>
-        </iframe>
-      `;
+      document.getElementById("chartFrame").src =
+        `https://www.tradingview.com/widgetembed/?symbol=${symbol}&interval=D`;
     }
+
+    function sortTable(colIndex) {
+      currentResults.sort((a, b) => {
+        const valA = (colIndex === 2 ? a.type : a[["symbol","timeframe"][colIndex]]) || "";
+        const valB = (colIndex === 2 ? b.type : b[["symbol","timeframe"][colIndex]]) || "";
+        return valA.localeCompare(valB);
+      });
+      displayResults(currentResults);
+    }
+
+    document.getElementById("search").addEventListener("input", function () {
+      const q = this.value.toUpperCase();
+      const filtered = currentResults.filter(r => r.symbol.toUpperCase().includes(q));
+      displayResults(filtered);
+    });
   </script>
 
 </body>
