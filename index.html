@@ -70,7 +70,7 @@ function runScan() {
   };
 
   // Load chart
-  loadChart("FX:XAUUSD", intervalMap[tf]);
+  loadChart("FOREXCOM:XAUUSD", intervalMap[tf]);
 
   // Call backend
   fetch("https://crt-screener-backend-rnoo.vercel.app/scan?tf=" + tf)
