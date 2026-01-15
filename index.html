@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+  <meta charset="UTF-8" />
   <title>CRT Screener</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <style>
     body {
@@ -10,140 +12,135 @@
       padding: 20px;
     }
 
+    h1 {
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 6px 12px;
+      cursor: pointer;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
       background: #fff;
+      margin-top: 15px;
+    }
+
+    th, td {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+      text-align: center;
     }
 
     th {
-      background: #222;
-      color: #fff;
-      padding: 8px;
+      background: #111;
+      color: white;
     }
 
-    td {
-      padding: 8px;
-      border-bottom: 1px solid #ddd;
-    }
-
-    tr:hover {
-      background: #f0f8ff;
-    }
-
-    button {
-      padding: 6px 10px;
+    .btn-view {
+      padding: 5px 10px;
+      border: 1px solid #444;
+      background: #fff;
       cursor: pointer;
+    }
+
+    .option-a {
+      color: green;
+      font-weight: bold;
+    }
+
+    .option-b {
+      color: red;
+      font-weight: bold;
+    }
+
+    #chart {
+      margin-top: 20px;
+      height: 500px;
+      background: white;
     }
   </style>
 </head>
 
 <body>
 
-<h2>CRT Screener</h2>
+  <h1>CRT Screener</h1>
 
-<select id="tf">
-  <option value="daily">Daily</option>
-  <option value="weekly">Weekly</option>
-  <option value="monthly">Monthly</option>
-</select>
+  <select id="timeframe">
+    <option value="daily">Daily</option>
+    <option value="4h">4H</option>
+    <option value="1h">1H</option>
+  </select>
 
-<button onclick="runScan()">Run Scan</button>
+  <button onclick="runScan()">Run Scan</button>
 
-<h3>Results</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Symbol</th>
+        <th>Timeframe</th>
+        <th>Status</th>
+        <th>Chart</th>
+      </tr>
+    </thead>
+    <tbody id="results"></tbody>
+  </table>
 
-<table>
-  <thead>
-    <tr>
-      <th>Symbol</th>
-      <th>Timeframe</th>
-      <th>Status</th>
-      <th>Chart</th>
-    </tr>
-  </thead>
-  <tbody id="result"></tbody>
-</table>
+  <div id="chart"></div>
 
-<h3>Chart</h3>
-<div id="tvChart"></div>
+  <script>
+    const API_URL = "https://crt-screener-backend.onrender.com/scan";
 
-<!-- TradingView Library -->
-<script src="https://s3.tradingview.com/tv.js"></script>
+    async function runScan() {
+      const tf = document.getElementById("timeframe").value;
+      const tbody = document.getElementById("results");
 
-<script>
-let tvWidget;
+      tbody.innerHTML = "<tr><td colspan='4'>Scanning...</td></tr>";
 
-const intervalMap = {
-  daily: "D",
-  weekly: "W",
-  monthly: "M"
-};
+      const res = await fetch(`${API_URL}?timeframe=${tf}`);
+      const data = await res.json();
 
-const symbols = [
-  { name: "XAUUSD", tv: "OANDA:XAUUSD" },
-  { name: "XAGUSD", tv: "OANDA:XAGUSD" },
-  { name: "US500", tv: "OANDA:SPX500USD" }
-];
+      tbody.innerHTML = "";
 
-function loadChart(symbol, interval) {
-  if (tvWidget) tvWidget.remove();
+      data.forEach(row => {
+        const tr = document.createElement("tr");
 
-  tvWidget = new TradingView.widget({
-    width: "100%",
-    height: 500,
-    symbol: symbol,
-    interval: interval,
-    timezone: "Asia/Kolkata",
-    theme: "light",
-    style: "1",
-    locale: "en",
-    container_id: "tvChart"
-  });
-}
+        const typeClass =
+          row.type === "OPTION_A_CONTINUATION" ? "option-a" :
+          row.type === "OPTION_B_REVERSAL" ? "option-b" : "";
 
-function runScan() {
-  const tf = document.getElementById("tf").value;
-  const interval = intervalMap[tf];
-  const tbody = document.getElementById("result");
-
-  tbody.innerHTML = "";
-
-  // Load default chart
-  loadChart("OANDA:XAUUSD", interval);
-
-  symbols.forEach(symbol => {
-    fetch("https://crt-screener-backend-rnoo.vercel.app/scan?tf=" + tf)
-      .then(res => res.json())
-      .then(data => {
-        const row = document.createElement("tr");
-
-        row.innerHTML = `
-          <td>${symbol.name}</td>
-         <td>{row.timeframe}</td>
-<td>{row.type}</td>
-
+        tr.innerHTML = `
+          <td>${row.symbol}</td>
+          <td>${row.timeframe}</td>
+          <td class="${typeClass}">
+            ${row.type.replaceAll("_", " ")}
+          </td>
           <td>
-            <button onclick="loadChart('${symbol.tv}', '${interval}')">
-              📈 View
+            <button class="btn-view" onclick="openChart('${row.symbol}')">
+              View
             </button>
           </td>
         `;
 
-        tbody.appendChild(row);
-      })
-      .catch(() => {
-        tbody.innerHTML += `
-          <tr>
-            <td>${symbol.name}</td>
-            <td>${tf}</td>
-            <td>Error</td>
-            <td>-</td>
-          </tr>
-        `;
+        tbody.appendChild(tr);
       });
-  });
-}
-</script>
+    }
+
+    function openChart(symbol) {
+      document.getElementById("chart").innerHTML = `
+        <iframe
+          src="https://www.tradingview.com/widgetembed/?symbol=${symbol}&interval=D&theme=light"
+          width="100%"
+          height="100%"
+          frameborder="0"
+          allowfullscreen>
+        </iframe>
+      `;
+    }
+  </script>
 
 </body>
 </html>
+
