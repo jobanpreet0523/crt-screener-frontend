@@ -1,100 +1,102 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>CRT Screener Dashboard</title>
+<meta charset="UTF-8">
+<title>CRT Screener</title>
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      color: #222;
-    }
+<style>
+:root {
+  --dark: #111;
+  --blue: #0b5ed7;
+  --light: #f5f7fa;
+  --border: #ddd;
+}
 
-    header {
-      background: #111;
-      color: #fff;
-      padding: 14px 20px;
-      font-size: 20px;
-      font-weight: bold;
-    }
+body {
+  margin: 0;
+  font-family: Segoe UI, Arial, sans-serif;
+  background: var(--light);
+}
 
-    .controls {
-      display: flex;
-      gap: 10px;
-      padding: 15px 20px;
-      background: #fff;
-      border-bottom: 1px solid #ddd;
-    }
+header {
+  background: var(--dark);
+  color: white;
+  padding: 15px 20px;
+  font-size: 20px;
+  display: flex;
+  justify-content: space-between;
+}
 
-    select, input, button {
-      padding: 8px 12px;
-      font-size: 14px;
-    }
+.badge {
+  background: var(--blue);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+}
 
-    button {
-      background: #0b5ed7;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
+.controls {
+  background: white;
+  padding: 12px 20px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
 
-    button:hover {
-      background: #084298;
-    }
+select, button {
+  padding: 8px 12px;
+  font-size: 14px;
+}
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background: #fff;
-      margin-top: 10px;
-    }
+button {
+  background: var(--blue);
+  color: white;
+  border: none;
+  cursor: pointer;
+}
 
-    thead {
-      background: #000;
-      color: #fff;
-    }
+button:hover { opacity: .9; }
 
-    th, td {
-      padding: 10px;
-      border-bottom: 1px solid #e5e5e5;
-      text-align: left;
-      font-size: 14px;
-    }
+.container { padding: 0 20px; }
 
-    tbody tr:hover {
-      background: #f1f5ff;
-    }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  margin-top: 10px;
+}
 
-    .container {
-      padding: 0 20px 40px;
-    }
+thead {
+  background: black;
+  color: white;
+  position: sticky;
+  top: 0;
+}
 
-    .status {
-      padding: 20px;
-      text-align: center;
-      color: #666;
-    }
+th, td {
+  padding: 10px;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+}
 
-    .crt {
-      font-weight: bold;
-    }
+tbody tr:hover { background: #eef3ff; }
 
-    .bullish {
-      color: green;
-    }
+.bull { color: green; font-weight: bold; }
+.bear { color: red; font-weight: bold; }
 
-    .bearish {
-      color: red;
-    }
-  </style>
+.status {
+  text-align: center;
+  padding: 25px;
+  color: #666;
+}
+</style>
 </head>
 
 <body>
 
 <header>
   CRT Screener Dashboard
+  <span class="badge" id="count">0</span>
 </header>
 
 <div class="controls">
@@ -104,93 +106,88 @@
     <option value="monthly">Monthly</option>
   </select>
 
-  <input type="text" id="search" placeholder="Search symbol..." />
+  <select id="filter">
+    <option value="all">All CRT</option>
+    <option value="bull">Bullish CRT</option>
+    <option value="bear">Bearish CRT</option>
+  </select>
 
-  <button onclick="runScan()">Run Scan</button>
+  <button onclick="scan()">Run Scan</button>
 </div>
 
 <div class="container">
-  <table>
-    <thead>
-      <tr>
-        <th>Symbol</th>
-        <th>Timeframe</th>
-        <th>CRT Type</th>
-        <th>Chart</th>
-      </tr>
-    </thead>
-    <tbody id="rows">
-      <tr>
-        <td colspan="4" class="status">
-          Run scan to see results
-        </td>
-      </tr>
-    </tbody>
-  </table>
+<table>
+<thead>
+<tr>
+  <th>Symbol</th>
+  <th>TF</th>
+  <th>CRT Type</th>
+  <th>Chart</th>
+</tr>
+</thead>
+
+<tbody id="rows">
+<tr>
+  <td colspan="4" class="status">Click Run Scan</td>
+</tr>
+</tbody>
+</table>
 </div>
 
 <script>
-  const BACKEND = "https://YOUR_BACKEND_URL";
+const API = "https://YOUR_BACKEND_URL";
 
-  async function runScan() {
-    const tf = document.getElementById("tf").value;
-    const tbody = document.getElementById("rows");
+async function scan() {
+  const tf = tfSelect.value;
+  const filter = filterSelect.value;
+  rows.innerHTML = `<tr><td colspan="4" class="status">Scanning...</td></tr>`;
+  count.innerText = "…";
 
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="4" class="status">Scanning markets...</td>
-      </tr>
-    `;
+  try {
+    const res = await fetch(`${API}/scan?tf=${tf}`);
+    const data = await res.json();
 
-    try {
-      const res = await fetch(`${BACKEND}/scan?tf=${tf}`);
-      const data = await res.json();
+    let results = data.results || [];
 
-      if (!data.results || data.results.length === 0) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="4" class="status">
-              No CRT found for selected timeframe
-            </td>
-          </tr>
-        `;
-        return;
-      }
+    if (filter === "bull")
+      results = results.filter(r => r.type.toLowerCase().includes("bull"));
 
-      tbody.innerHTML = "";
+    if (filter === "bear")
+      results = results.filter(r => r.type.toLowerCase().includes("bear"));
 
-      data.results.forEach(r => {
-        const tr = document.createElement("tr");
+    count.innerText = results.length;
 
-        const crtClass =
-          r.type.toLowerCase().includes("bull") ? "bullish" :
-          r.type.toLowerCase().includes("bear") ? "bearish" : "";
+    if (results.length === 0) {
+      rows.innerHTML = `<tr><td colspan="4" class="status">No CRT found</td></tr>`;
+      return;
+    }
 
-        tr.innerHTML = `
+    rows.innerHTML = "";
+    results.forEach(r => {
+      const cls = r.type.toLowerCase().includes("bull") ? "bull" : "bear";
+      rows.innerHTML += `
+        <tr>
           <td>${r.symbol}</td>
           <td>${r.timeframe}</td>
-          <td class="crt ${crtClass}">${r.type}</td>
+          <td class="${cls}">${r.type}</td>
           <td>
-            <a href="https://www.tradingview.com/chart/?symbol=${r.symbol}"
-               target="_blank">
+            <a target="_blank"
+               href="https://www.tradingview.com/chart/?symbol=${r.symbol}">
               View
             </a>
           </td>
-        `;
+        </tr>`;
+    });
 
-        tbody.appendChild(tr);
-      });
-
-    } catch (err) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="4" class="status">
-            Backend not reachable
-          </td>
-        </tr>
-      `;
-    }
+  } catch {
+    rows.innerHTML = `<tr><td colspan="4" class="status">Backend error</td></tr>`;
   }
+}
+
+const tfSelect = document.getElementById("tf");
+const filterSelect = document.getElementById("filter");
+const rows = document.getElementById("rows");
+const count = document.getElementById("count");
 </script>
 
 </body>
