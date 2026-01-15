@@ -16,37 +16,11 @@
 
 <br><br>
 
-<button onclick=<script>
-function runScan() {
-  const tf = document.getElementById("timeframe").value;
+<button onclick="runScan()">Run Scan</button>
 
-  // Change TradingView chart timeframe
-  document.getElementById("tvChart").src =
-    "https://www.tradingview.com/chart/?symbol=FX:XAUUSD&interval=" + tf;
+<h3>Results</h3>
 
-  // (Optional) backend call
-  fetch("https://crt-screener-backend-rnoo.vercel.app/scan?tf=" + tf)
-    .then(res => res.json())
-    .then(data => {
-      
-    });
-}
-</script>
-
-<h3>Chart</h3>
-
-<iframe
-  id="tvChart"
-  src="https://www.tradingview.com/chart/?symbol=FX:XAUUSD"
-  width="100%"
-  height="500"
-  style="border:0;"
-></iframe>
-
-<pre id="result"></pre>
-
-<script>
-function scan()<table border="1" cellpadding="8" style="margin-top:10px;">
+<table border="1" cellpadding="8" style="margin-top:10px;">
   <thead>
     <tr>
       <th>Symbol</th>
@@ -55,37 +29,53 @@ function scan()<table border="1" cellpadding="8" style="margin-top:10px;">
       <th>Chart</th>
     </tr>
   </thead>
-  <tbody id="result"></tbody>
+  <tbody id="result">
+  </tbody>
 </table>
- {
+
+<h3>Chart</h3>
+
+<iframe
+  id="tvChart"
+  src="https://www.tradingview.com/chart/?symbol=FX:XAUUSD"
+  width="100%"
+  height="500"
+  style="border:0;">
+</iframe>
+
+<script>
+function runScan() {
   const tf = document.getElementById("tf").value;
 
-  fetch("https://crt-screener-backend-rnoo.vercel.app/scan?tf=" + tf)
+  // Update TradingView chart
+  document.getElementById("tvChart").src =
+    "https://www.tradingview.com/chart/?symbol=FX:XAUUSD&interval=" + tf;
 
+  // Call backend
+  fetch("https://crt-screener-backend-rnoo.vercel.app/scan?tf=" + tf)
     .then(response => response.json())
     .then(data => {
-      
+      const tbody = document.getElementById("result");
+
+      tbody.innerHTML = `
+        <tr>
+          <td>XAUUSD</td>
+          <td>${data.timeframe}</td>
+          <td>${data.status}</td>
+          <td>
+            <a href="https://www.tradingview.com/chart/?symbol=FX:XAUUSD"
+               target="_blank">📈 View</a>
+          </td>
+        </tr>
+      `;
     })
     .catch(error => {
-      document.getElementById("result").innerText = "Error connecting to backend";
-    });const tbody = document.getElementById("result");
-
-tbody.innerHTML = `
-  <tr>
-    <td>XAUUSD</td>
-    <td>${data.timeframe}</td>
-    <td>${data.status}</td>
-    <td>
-      <a href="https://www.tradingview.com/chart/?symbol=FX:XAUUSD"
-         target="_blank">
-         📈 View
-      </a>
-    </td>
-  </tr>
-`;
-
+      document.getElementById("result").innerHTML =
+        "<tr><td colspan='4'>Backend error</td></tr>";
+    });
 }
 </script>
 
 </body>
 </html>
+
