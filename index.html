@@ -119,8 +119,9 @@ function runScan() {
 
         row.innerHTML = `
           <td>${symbol.name}</td>
-          <td>${data.timeframe}</td>
-          <td>${data.status}</td>
+         <td>{row.timeframe}</td>
+<td>{row.type}</td>
+
           <td>
             <button onclick="loadChart('${symbol.tv}', '${interval}')">
               📈 View
