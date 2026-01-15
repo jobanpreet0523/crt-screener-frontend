@@ -2,6 +2,40 @@
 <html>
 <head>
   <title>CRT Screener</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+    }
+
+    th {
+      background: #222;
+      color: #fff;
+      padding: 8px;
+    }
+
+    td {
+      padding: 8px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    tr:hover {
+      background: #f0f8ff;
+    }
+
+    button {
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 
 <body>
@@ -14,13 +48,11 @@
   <option value="monthly">Monthly</option>
 </select>
 
-<br><br>
-
 <button onclick="runScan()">Run Scan</button>
 
 <h3>Results</h3>
 
-<table border="1" cellpadding="8" style="margin-top:10px;">
+<table>
   <thead>
     <tr>
       <th>Symbol</th>
@@ -33,7 +65,6 @@
 </table>
 
 <h3>Chart</h3>
-
 <div id="tvChart"></div>
 
 <!-- TradingView Library -->
@@ -43,9 +74,7 @@
 let tvWidget;
 
 function loadChart(symbol, interval) {
-  if (tvWidget) {
-    tvWidget.remove();
-  }
+  if (tvWidget) tvWidget.remove();
 
   tvWidget = new TradingView.widget({
     width: "100%",
@@ -59,7 +88,7 @@ function loadChart(symbol, interval) {
     container_id: "tvChart"
   });
 }
-<script>
+
 function runScan() {
   const tf = document.getElementById("tf").value;
 
@@ -96,35 +125,18 @@ function runScan() {
         `;
 
         tbody.appendChild(row);
+      })
+      .catch(() => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${symbol.name}</td>
+            <td>${tf}</td>
+            <td>Error</td>
+            <td>-</td>
+          </tr>
+        `;
       });
   });
-}
-</script>
-
-
-  // Load chart
-  loadChart("FOREXCOM:XAUUSD", intervalMap[tf]);
-
-  // Call backend
-  fetch("https://crt-screener-backend-rnoo.vercel.app/scan?tf=" + tf)
-    .then(res => res.json())
-    .then(data => {
-      document.getElementById("result").innerHTML = `
-        <tr>
-          <td>XAUUSD</td>
-          <td>${data.timeframe}</td>
-          <td>${data.status}</td>
-          <td>
-            <a href="https://www.tradingview.com/chart/?symbol=FX:XAUUSD"
-               target="_blank">📈 View</a>
-          </td>
-        </tr>
-      `;
-    })
-    .catch(() => {
-      document.getElementById("result").innerHTML =
-        "<tr><td colspan='4'>Backend error</td></tr>";
-    });
 }
 </script>
 
