@@ -1,0 +1,17 @@
+import { useEffect } from "react";
+
+export default function TradingViewChart({ symbol }) {
+  useEffect(() => {
+    new window.TradingView.widget({
+      symbol: symbol,
+      interval: "D",
+      container_id: "tv_chart",
+      autosize: true,
+      theme: "dark",
+      style: "1",
+      locale: "en"
+    });
+  }, [symbol]);
+
+  return <div id="tv_chart" style={{ height: "500px" }} />;
+}
