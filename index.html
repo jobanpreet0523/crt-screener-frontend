@@ -1,150 +1,69 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>CRT Screener Dashboard</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-
+  <title>CRT Screener</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      margin: 0;
-      padding: 20px;
+      font-family: Arial;
+      background: #0b1220;
+      color: #fff;
     }
-
-    h1 {
-      margin-bottom: 15px;
-    }
-
-    .controls {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-
-    select, input, button {
-      padding: 8px 10px;
-      font-size: 14px;
-    }
-
-    button {
-      background: #0d6efd;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-
     table {
       width: 100%;
       border-collapse: collapse;
-      background: white;
+      margin-top: 20px;
     }
-
-    thead {
-      background: #111;
-      color: white;
-    }
-
     th, td {
       padding: 10px;
+      border-bottom: 1px solid #222;
       text-align: center;
-      border-bottom: 1px solid #ddd;
     }
-
-    tbody tr:hover {
-      background: #f1f1f1;
+    th {
+      background: #111827;
     }
-
-    .msg {
-      padding: 20px;
-      text-align: center;
-      color: #666;
+    tr:hover {
+      background: #1f2937;
     }
+    .bullish { color: #22c55e; }
+    .bearish { color: #ef4444; }
   </style>
 </head>
 
 <body>
-
-  <h1>CRT Screener Dashboard</h1>
-
-  <div class="controls">
-    <select id="tf">
-      <option value="daily">Daily</option>
-      <option value="weekly">Weekly</option>
-      <option value="monthly">Monthly</option>
-    </select>
-
-    <input id="search" placeholder="Search symbol..." />
-
-    <button onclick="runScan()">Run Scan</button>
-  </div>
+  <h2>📊 CRT Screener</h2>
 
   <table>
     <thead>
       <tr>
         <th>Symbol</th>
-        <th>Timeframe</th>
-        <th>CRT Type</th>
+        <th>CRT</th>
+        <th>Open</th>
+        <th>High</th>
+        <th>Low</th>
+        <th>Close</th>
       </tr>
     </thead>
-    <tbody id="tableBody">
-      <tr>
-        <td colspan="3" class="msg">
-          Click “Run Scan” to fetch data
-        </td>
-      </tr>
-    </tbody>
+    <tbody id="data"></tbody>
   </table>
 
-<script>
-async function runScan() {
-  const tf = document.getElementById("tf").value;
-  const search = document.getElementById("search").value.toUpperCase();
-  const tbody = document.getElementById("tableBody");
-
-  tbody.innerHTML = `<tr><td colspan="3" class="msg">Scanning...</td></tr>`;
-
-  try {
-    const res = await fetch(
-      `https://YOUR-RENDER-URL/scan?tf=${tf}`
-    );
-    const data = await res.json();
-
-    if (!data.length) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="3" class="msg">
-            No CRT found for the selected timeframe.
-          </td>
-        </tr>`;
-      return;
-    }
-
-    tbody.innerHTML = "";
-
-    data
-      .filter(d => !search || d.symbol.includes(search))
-      .forEach(d => {
-        tbody.innerHTML += `
-          <tr>
-            <td>${d.symbol}</td>
-            <td>${d.timeframe}</td>
-            <td>${d.crt_type}</td>
-          </tr>`;
+  <script>
+    fetch("https://crt-screener-backend.onrender.com/scan?tf=daily")
+      .then(res => res.json())
+      .then(rows => {
+        const tbody = document.getElementById("data");
+        rows.forEach(r => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${r.symbol}</td>
+            <td class="${r.crt.includes("Bullish") ? "bullish" : "bearish"}">${r.crt}</td>
+            <td>${r.open}</td>
+            <td>${r.high}</td>
+            <td>${r.low}</td>
+            <td>${r.close}</td>
+          `;
+          tbody.appendChild(tr);
+        });
       });
-
-  } catch (err) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="3" class="msg">
-          API Error – backend not responding
-        </td>
-      </tr>`;
-    console.error(err);
-  }
-}
-</script>
-
+  </script>
 </body>
 </html>
