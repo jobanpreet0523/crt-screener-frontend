@@ -1,39 +1,59 @@
 import { useEffect, useState } from "react";
-import { fetchCRT } from "../api/crtApi";
+
+const API_URL = "https://crt-screener-backend.onrender.com";
 
 export default function CRTScreener() {
-  const [data, setData] = useState([]);
-  const [tf, setTf] = useState("daily");
+  const [results, setResults] = useState([]);
+  const [timeframe, setTimeframe] = useState("daily");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    loadData();
-  }, [tf]);
+    fetchData();
+  }, [timeframe]);
 
-  async function loadData() {
+  async function fetchData() {
     setLoading(true);
+    setError("");
+
     try {
-      const res = await fetchCRT(tf);
-      setData(res.results);
+      const res = await fetch(`${API_URL}/scan?tf=${timeframe}`);
+      if (!res.ok) throw new Error("API error");
+
+      const data = await res.json();
+      setResults(data.results || []);
     } catch (err) {
-      console.error(err);
+      setError("Failed to load CRT data");
     }
+
     setLoading(false);
   }
 
   return (
-    <div>
-      <h2>CRT Screener</h2>
+    <div style={{ padding: "20px", fontFamily: "Arial" }}>
+      <h2>CRT Market Screener</h2>
 
-      <select value={tf} onChange={e => setTf(e.target.value)}>
+      {/* Timeframe Selector */}
+      <select
+        value={timeframe}
+        onChange={(e) => setTimeframe(e.target.value)}
+        style={{ marginBottom: "15px" }}
+      >
         <option value="daily">Daily</option>
         <option value="4h">4H</option>
         <option value="1h">1H</option>
       </select>
 
+      {/* Status */}
       {loading && <p>Scanning markets...</p>}
+      {error && <p style={{ color: "red" }}>{error}</p>}
 
-      <table>
+      {/* Results Table */}
+      <table
+        border="1"
+        cellPadding="8"
+        style={{ width: "100%", borderCollapse: "collapse" }}
+      >
         <thead>
           <tr>
             <th>Symbol</th>
@@ -42,13 +62,33 @@ export default function CRTScreener() {
           </tr>
         </thead>
         <tbody>
-          {data.map((row, i) => (
-            <tr key={i}>
-              <td>{row.symbol}</td>
-              <td>{row.crt}</td>
-              <td>{row.timeframe}</td>
+          {results.length === 0 && !loading ? (
+            <tr>
+              <td colSpan="3" style={{ textAlign: "center" }}>
+                No CRT setups found
+              </td>
             </tr>
-          ))}
+          ) : (
+            results.map((row, index) => (
+              <tr key={index}>
+                <td>{row.symbol}</td>
+                <td
+                  style={{
+                    color:
+                      row.crt === "Bullish"
+                        ? "green"
+                        : row.crt === "Bearish"
+                        ? "red"
+                        : "gray",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {row.crt}
+                </td>
+                <td>{row.timeframe}</td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </div>
