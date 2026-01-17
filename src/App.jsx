@@ -1,7 +1,7 @@
-import CRTScreener from "./components/CRTScreener";
+import CRTDashboard from "./components/CRTDashboard";
 
 function App() {
-  return <CRTScreener />;
+  return <CRTDashboard />;
 }
 
 export default App;
