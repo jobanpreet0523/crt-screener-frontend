@@ -14,12 +14,13 @@ export default function CRTScreener() {
     setResults([]);
 
     try {
-      const res = await fetch(`${API_BASE}/scan?tf=${timeframe}`);
-      const data = await res.json();
+      axios.get(`${API_URL}/scan`, {
+  params: {
+    symbol,
+    timeframe
+  }
+})
 
-      if (!res.ok || data.error) {
-        throw new Error(data.error || "Scan failed");
-      }
 
       setResults(data.results || []);
     } catch (err) {
