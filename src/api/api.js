@@ -1,9 +1,13 @@
-const BASE_URL = "http://127.0.0.1:8000";
-// or deployed URL
+const BASE_URL = "https://crt-backend.onrender.com";
 
-export const scanCRT = async (symbol, timeframe) => {
+export async function scanCRT(symbol, timeframe) {
   const res = await fetch(
     `${BASE_URL}/scan?symbol=${symbol}&timeframe=${timeframe}`
   );
-  return res.json();
-};
+
+  if (!res.ok) {
+    throw new Error("Backend error");
+  }
+
+  return await res.json();
+}
