@@ -1,11 +1,7 @@
-import Scanner from "./components/Scanner";
-import "./index.css";
+import CRTDashboard from "./components/CRTDashboard";
 
-export default function App() {
-  return (
-    <div className="app">
-      <h1>CRT Screener Dashboard</h1>
-      <Scanner />
-    </div>
-  );
+function App() {
+  return <CRTDashboard />;
 }
+
+export default App;
