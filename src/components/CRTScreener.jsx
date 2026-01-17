@@ -12,11 +12,19 @@ export default function CRTScreener() {
   /* ---------------------------
      AUTO WARM-UP (Render Fix)
   ----------------------------*/
-  useEffect(() => {
-    const ping = () => {
-      fetch(`${BACKEND_URL}/`)
-        .then(() => console.log("Backend warmed"))
-        .catch(() => console.log("Backend sleep"));
+
+      useEffect(() => {
+  const ping = () => {
+    fetch(`${BACKEND_URL}/scan?symbol=NIFTY&timeframe=daily`)
+      .then(() => console.log("Backend warmed"))
+      .catch(() => console.log("Backend sleeping"));
+  };
+
+  ping();
+  const interval = setInterval(ping, 4 * 60 * 1000); // every 4 min
+  return () => clearInterval(interval);
+}, []);
+
     };
 
     ping(); // on load
