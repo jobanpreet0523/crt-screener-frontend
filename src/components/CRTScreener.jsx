@@ -1,33 +1,34 @@
-import { fetchCRTResults } from "../services/api";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { fetchCRT } from "../api/crtApi";
 
-function CRTScreener() {
-  const [results, setResults] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+export default function CRTScreener() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const runScan = async (filters) => {
-    setLoading(true);
-    setError(null);
+  useEffect(() => {
+    fetchCRT()
+      .then(res => {
+        setData(res.results);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, []);
 
-    try {
-      const data = await fetchCRTResults(filters);
-      setResults(data.results);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  if (loading) return <p>Loading...</p>;
 
   return (
-    <>
-      <Scanner onScan={runScan} />
-
-      {loading && <p>Scanning market...</p>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
-
-      <ResultsTable data={results} />
-    </>
+    <div>
+      {data.map((item, i) => (
+        <div key={i}>
+          <h3>{item.symbol}</h3>
+          <p>{item.crt_type} – {item.direction}</p>
+          <p>Entry: {item.entry} | SL: {item.sl} | Target: {item.target}</p>
+          <p>Grade: {item.grade}</p>
+        </div>
+      ))}
+    </div>
   );
 }
