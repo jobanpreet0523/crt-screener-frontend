@@ -13,14 +13,11 @@ export default function CRTScreener() {
     setError("");
     setResults([]);
 
-    try {
-      axios.get(`${API_URL}/scan`, {
-  params: {
-    symbol,
-    timeframe
-  }
-})
-
+   fetch(`${API_URL}/scan-batch?timeframe=${timeframe}`)
+  .then(res => res.json())
+  .then(data => setResults(data))
+  .catch(err => console.error(err));
+     
 
       setResults(data.results || []);
     } catch (err) {
