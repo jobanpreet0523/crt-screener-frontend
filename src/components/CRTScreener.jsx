@@ -1,132 +1,121 @@
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 
-const API_BASE = "https://crt-screener-backend.onrender.com";
+const BACKEND_URL = "https://crt-backend.onrender.com";
 
 export default function CRTScreener() {
   const [timeframe, setTimeframe] = useState("daily");
-  const [loading, setLoading] = useState(false);
+  const [symbol, setSymbol] = useState("");
   const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  /* ---------------------------
+     AUTO WARM-UP (Render Fix)
+  ----------------------------*/
+  useEffect(() => {
+    const ping = () => {
+      fetch(`${BACKEND_URL}/`)
+        .then(() => console.log("Backend warmed"))
+        .catch(() => console.log("Backend sleep"));
+    };
+
+    ping(); // on load
+    const interval = setInterval(ping, 5 * 60 * 1000); // every 5 min
+    return () => clearInterval(interval);
+  }, []);
+
+  /* ---------------------------
+     RUN SCAN
+  ----------------------------*/
   const runScan = async () => {
     setLoading(true);
     setError("");
     setResults([]);
 
-   fetch(`${API_URL}/scan-batch?timeframe=${timeframe}`)
-  .then(res => res.json())
-  .then(data => setResults(data))
-  .catch(err => console.error(err));
-     
+    try {
+      let url = "";
 
-      setResults(data.results || []);
+      // Single symbol scan
+      if (symbol.trim() !== "") {
+        url = `${BACKEND_URL}/scan?symbol=${symbol}&timeframe=${timeframe}`;
+      }
+      // Batch scan (NSE stocks)
+      else {
+        url = `${BACKEND_URL}/scan-batch?timeframe=${timeframe}`;
+      }
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      if (!data || data.length === 0) {
+        setError("No CRT found for the selected timeframe.");
+      } else {
+        setResults(data);
+      }
     } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+      setError("Backend not responding. Try again.");
     }
+
+    setLoading(false);
   };
 
   return (
-    <div style={styles.container}>
-      <h2 style={styles.title}>📊 CRT Screener</h2>
+    <div style={{ padding: "20px" }}>
+      <h2>CRT Screener Dashboard</h2>
 
       {/* Controls */}
-      <div style={styles.controls}>
-        <select
-          value={timeframe}
-          onChange={(e) => setTimeframe(e.target.value)}
-          style={styles.select}
-        >
+      <div style={{ display: "flex", gap: "10px", marginBottom: "15px" }}>
+        <select value={timeframe} onChange={(e) => setTimeframe(e.target.value)}>
           <option value="daily">Daily</option>
-          <option value="4h">4H</option>
-          <option value="1h">1H</option>
-          <option value="15m">15M</option>
+          <option value="15m">15 Min</option>
+          <option value="5m">5 Min</option>
         </select>
 
-        <button onClick={runScan} style={styles.button}>
-          {loading ? "Scanning..." : "Run Scan"}
-        </button>
+        <input
+          type="text"
+          placeholder="Search symbol..."
+          value={symbol}
+          onChange={(e) => setSymbol(e.target.value.toUpperCase())}
+        />
+
+        <button onClick={runScan}>Run Scan</button>
       </div>
 
-      {/* Errors */}
-      {error && <p style={styles.error}>❌ {error}</p>}
+      {/* Status */}
+      {loading && <p>Scanning market…</p>}
+      {error && <p style={{ color: "gray" }}>{error}</p>}
 
-      {/* Results */}
-      <table style={styles.table}>
-        <thead>
-          <tr>
-            <th>Symbol</th>
-            <th>CRT Bias</th>
-            <th>Timeframe</th>
-          </tr>
-        </thead>
-        <tbody>
-          {results.length === 0 && !loading ? (
+      {/* Results Table */}
+      {results.length > 0 && (
+        <table width="100%" border="1" cellPadding="8">
+          <thead>
             <tr>
-              <td colSpan="3" style={{ textAlign: "center" }}>
-                No results
-              </td>
+              <th>Symbol</th>
+              <th>Timeframe</th>
+              <th>CRT Type</th>
+              <th>Chart</th>
             </tr>
-          ) : (
-            results.map((row, idx) => (
-              <tr key={idx}>
+          </thead>
+          <tbody>
+            {results.map((row, i) => (
+              <tr key={i}>
                 <td>{row.symbol}</td>
-                <td
-                  style={{
-                    color:
-                      row.crt === "Bullish"
-                        ? "#16a34a"
-                        : row.crt === "Bearish"
-                        ? "#dc2626"
-                        : "#444",
-                    fontWeight: "bold",
-                  }}
-                >
-                  {row.crt}
-                </td>
                 <td>{row.timeframe}</td>
+                <td>{row.crt_type}</td>
+                <td>
+                  <a
+                    href={`https://www.tradingview.com/chart/?symbol=NSE:${row.symbol}`}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Open
+                  </a>
+                </td>
               </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }
-
-/* ---------- Styles ---------- */
-
-const styles = {
-  container: {
-    maxWidth: "800px",
-    margin: "40px auto",
-    padding: "20px",
-    fontFamily: "Arial, sans-serif",
-  },
-  title: {
-    marginBottom: "20px",
-  },
-  controls: {
-    display: "flex",
-    gap: "10px",
-    marginBottom: "20px",
-  },
-  select: {
-    padding: "8px",
-    fontSize: "16px",
-  },
-  button: {
-    padding: "8px 16px",
-    fontSize: "16px",
-    cursor: "pointer",
-  },
-  error: {
-    color: "red",
-    marginBottom: "10px",
-  },
-  table: {
-    width: "100%",
-    borderCollapse: "collapse",
-  },
-};
