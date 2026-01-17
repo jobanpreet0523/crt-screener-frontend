@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-const BACKEND_URL = "https://crt-backend.onrender.com";
+const BACKEND_URL = "https://crt-screener-backend-1.onrender.com";
 
 export default function CRTScreener() {
   const [timeframe, setTimeframe] = useState("daily");
@@ -12,23 +12,16 @@ export default function CRTScreener() {
   /* ---------------------------
      AUTO WARM-UP (Render Fix)
   ----------------------------*/
-
-      useEffect(() => {
-  const ping = () => {
-    fetch(`${BACKEND_URL}/scan?symbol=NIFTY&timeframe=daily`)
-      .then(() => console.log("Backend warmed"))
-      .catch(() => console.log("Backend sleeping"));
-  };
-
-  ping();
-  const interval = setInterval(ping, 4 * 60 * 1000); // every 4 min
-  return () => clearInterval(interval);
-}, []);
-
+  useEffect(() => {
+    const ping = () => {
+      fetch(`${BACKEND_URL}/`)
+        .then(() => console.log("Backend awake"))
+        .catch(() => console.log("Warm-up failed"));
     };
 
-    ping(); // on load
+    ping(); // immediate wake
     const interval = setInterval(ping, 5 * 60 * 1000); // every 5 min
+
     return () => clearInterval(interval);
   }, []);
 
@@ -47,7 +40,7 @@ export default function CRTScreener() {
       if (symbol.trim() !== "") {
         url = `${BACKEND_URL}/scan?symbol=${symbol}&timeframe=${timeframe}`;
       }
-      // Batch scan (NSE stocks)
+      // Batch scan
       else {
         url = `${BACKEND_URL}/scan-batch?timeframe=${timeframe}`;
       }
@@ -93,7 +86,7 @@ export default function CRTScreener() {
       {loading && <p>Scanning market…</p>}
       {error && <p style={{ color: "gray" }}>{error}</p>}
 
-      {/* Results Table */}
+      {/* Results */}
       {results.length > 0 && (
         <table width="100%" border="1" cellPadding="8">
           <thead>
