@@ -1,11 +1,9 @@
-const BASE_URL = "https://crt-screener-backend.onrender.com";
+const BASE_URL = "http://127.0.0.1:8000";
+// or deployed URL
 
-export async function fetchCRT(tf = "daily") {
-  const res = await fetch(`${BASE_URL}/scan?tf=${tf}`);
-
-  if (!res.ok) {
-    throw new Error("Failed to fetch CRT data");
-  }
-
+export const scanCRT = async (symbol, timeframe) => {
+  const res = await fetch(
+    `${BASE_URL}/scan?symbol=${symbol}&timeframe=${timeframe}`
+  );
   return res.json();
-}
+};
