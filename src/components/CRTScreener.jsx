@@ -1,59 +1,61 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-const API_URL = "https://crt-screener-backend.onrender.com";
+const API_BASE = "https://crt-screener-backend.onrender.com";
 
 export default function CRTScreener() {
-  const [results, setResults] = useState([]);
   const [timeframe, setTimeframe] = useState("daily");
   const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState([]);
   const [error, setError] = useState("");
 
-  useEffect(() => {
-    fetchData();
-  }, [timeframe]);
-
-  async function fetchData() {
+  const runScan = async () => {
     setLoading(true);
     setError("");
+    setResults([]);
 
     try {
-      const res = await fetch(`${API_URL}/scan?tf=${timeframe}`);
-      if (!res.ok) throw new Error("API error");
-
+      const res = await fetch(`${API_BASE}/scan?tf=${timeframe}`);
       const data = await res.json();
+
+      if (!res.ok || data.error) {
+        throw new Error(data.error || "Scan failed");
+      }
+
       setResults(data.results || []);
     } catch (err) {
-      setError("Failed to load CRT data");
+      setError(err.message);
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
-  }
+  };
 
   return (
-    <div style={{ padding: "20px", fontFamily: "Arial" }}>
-      <h2>CRT Market Screener</h2>
+    <div style={styles.container}>
+      <h2 style={styles.title}>📊 CRT Screener</h2>
 
-      {/* Timeframe Selector */}
-      <select
-        value={timeframe}
-        onChange={(e) => setTimeframe(e.target.value)}
-        style={{ marginBottom: "15px" }}
-      >
-        <option value="daily">Daily</option>
-        <option value="4h">4H</option>
-        <option value="1h">1H</option>
-      </select>
+      {/* Controls */}
+      <div style={styles.controls}>
+        <select
+          value={timeframe}
+          onChange={(e) => setTimeframe(e.target.value)}
+          style={styles.select}
+        >
+          <option value="daily">Daily</option>
+          <option value="4h">4H</option>
+          <option value="1h">1H</option>
+          <option value="15m">15M</option>
+        </select>
 
-      {/* Status */}
-      {loading && <p>Scanning markets...</p>}
-      {error && <p style={{ color: "red" }}>{error}</p>}
+        <button onClick={runScan} style={styles.button}>
+          {loading ? "Scanning..." : "Run Scan"}
+        </button>
+      </div>
 
-      {/* Results Table */}
-      <table
-        border="1"
-        cellPadding="8"
-        style={{ width: "100%", borderCollapse: "collapse" }}
-      >
+      {/* Errors */}
+      {error && <p style={styles.error}>❌ {error}</p>}
+
+      {/* Results */}
+      <table style={styles.table}>
         <thead>
           <tr>
             <th>Symbol</th>
@@ -65,21 +67,21 @@ export default function CRTScreener() {
           {results.length === 0 && !loading ? (
             <tr>
               <td colSpan="3" style={{ textAlign: "center" }}>
-                No CRT setups found
+                No results
               </td>
             </tr>
           ) : (
-            results.map((row, index) => (
-              <tr key={index}>
+            results.map((row, idx) => (
+              <tr key={idx}>
                 <td>{row.symbol}</td>
                 <td
                   style={{
                     color:
                       row.crt === "Bullish"
-                        ? "green"
+                        ? "#16a34a"
                         : row.crt === "Bearish"
-                        ? "red"
-                        : "gray",
+                        ? "#dc2626"
+                        : "#444",
                     fontWeight: "bold",
                   }}
                 >
@@ -94,3 +96,39 @@ export default function CRTScreener() {
     </div>
   );
 }
+
+/* ---------- Styles ---------- */
+
+const styles = {
+  container: {
+    maxWidth: "800px",
+    margin: "40px auto",
+    padding: "20px",
+    fontFamily: "Arial, sans-serif",
+  },
+  title: {
+    marginBottom: "20px",
+  },
+  controls: {
+    display: "flex",
+    gap: "10px",
+    marginBottom: "20px",
+  },
+  select: {
+    padding: "8px",
+    fontSize: "16px",
+  },
+  button: {
+    padding: "8px 16px",
+    fontSize: "16px",
+    cursor: "pointer",
+  },
+  error: {
+    color: "red",
+    marginBottom: "10px",
+  },
+  table: {
+    width: "100%",
+    borderCollapse: "collapse",
+  },
+};
