@@ -1,13 +1,6 @@
-const BASE_URL = "https://crt-backend.onrender.com";
+import api from "../services/api";
 
-export async function scanCRT(symbol, timeframe) {
-  const res = await fetch(
-    `${BASE_URL}/scan?symbol=${symbol}&timeframe=${timeframe}`
-  );
-
-  if (!res.ok) {
-    throw new Error("Backend error");
-  }
-
-  return await res.json();
-}
+export const fetchCRT = async () => {
+  const res = await api.get("/scan");
+  return res.data;
+};
