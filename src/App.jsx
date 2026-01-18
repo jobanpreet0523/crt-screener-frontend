@@ -1,50 +1,48 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-const API_BASE = "https://crt-screener-backend-1.onrender.com";
+function App() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-export default function App() {
-  const [result, setResult] = useState(null);
-  const [loading, setLoading] = useState(false);
-
-  const runBacktest = async () => {
-    setLoading(true);
-    setResult(null);
-
-    try {
-      const res = await fetch(`${API_BASE}/backtest`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          symbol: "NIFTY",
-          timeframe: "15m",
-          capital: 100000
-        })
+  useEffect(() => {
+    fetch("https://crt-screener-backend-1.onrender.com/scan/nse200")
+      .then(res => res.json())
+      .then(json => {
+        setData(json);
+        setLoading(false);
       });
+  }, []);
 
-      const data = await res.json();
-      setResult(data);
-    } catch (err) {
-      setResult({ error: "Backend not responding" });
-    }
-
-    setLoading(false);
-  };
+  if (loading) {
+    return <div style={{ color: "white" }}>Scanning NSE 200...</div>;
+  }
 
   return (
-    <div style={{ padding: 20, fontFamily: "Arial" }}>
-      <h1>📊 CRT Backtest Dashboard</h1>
+    <div style={{ background: "#0f172a", minHeight: "100vh", padding: "20px" }}>
+      <h1 style={{ color: "#22c55e" }}>CRT Screener – NSE 200</h1>
 
-      <button onClick={runBacktest} disabled={loading}>
-        {loading ? "Running..." : "Run Backtest"}
-      </button>
-
-      {result && (
-        <pre style={{ marginTop: 20, background: "#111", color: "#0f0", padding: 15 }}>
-          {JSON.stringify(result, null, 2)}
-        </pre>
-      )}
+      <table style={{ width: "100%", color: "white", marginTop: "20px" }}>
+        <thead>
+          <tr>
+            <th align="left">Symbol</th>
+            <th align="left">Timeframe</th>
+            <th align="left">Setup</th>
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((row, i) => (
+            <tr key={i}>
+              <td>{row.symbol}</td>
+              <td>{row.timeframe}</td>
+              <td>
+                <span style={{ color: "#38bdf8" }}>{row.setup}</span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
+
+export default App;
