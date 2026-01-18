@@ -1,12 +1,9 @@
-import React from "react";
 import CRTDashboard from "./components/CRTDashboard";
 
-function App() {
+export default function App() {
   return (
     <div>
       <CRTDashboard />
     </div>
   );
 }
-
-export default App;
