@@ -1,35 +1,21 @@
-import { useEffect, useState } from "react";
-import { fetchCrtScan } from "../api/crtApi";
-
-export default function CrtTable() {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchCrtScan("NIFTY", "15m")
-      .then(res => {
-        setData(res.results);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setLoading(false);
-      });
-  }, []);
-
-  if (loading) return <p>Loading CRT setups...</p>;
+export default function CrtTable({ data }) {
+  if (data.length === 0) {
+    return <p>No CRT setups found</p>;
+  }
 
   return (
-    <table border="1" cellPadding="8">
+    <table border="1" cellPadding="8" style={{ marginTop: "15px" }}>
       <thead>
         <tr>
           <th>Symbol</th>
           <th>Direction</th>
-          <th>CRT</th>
+          <th>CRT Type</th>
           <th>Entry</th>
           <th>SL</th>
           <th>Target</th>
           <th>Grade</th>
+          <th>Liquidity</th>
+          <th>HTF Bias</th>
         </tr>
       </thead>
       <tbody>
@@ -42,6 +28,8 @@ export default function CrtTable() {
             <td>{row.sl}</td>
             <td>{row.target}</td>
             <td>{row.grade}</td>
+            <td>{row.liquidity}</td>
+            <td>{row.htf_bias}</td>
           </tr>
         ))}
       </tbody>
