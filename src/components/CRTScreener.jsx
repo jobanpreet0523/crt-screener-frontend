@@ -1,34 +1,42 @@
 import { useEffect, useState } from "react";
-import { fetchCRT } from "../api/crtApi";
+import { API } from "./api";
 
-export default function CRTScreener() {
+export default function Screener() {
   const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchCRT()
-      .then(res => {
-        setData(res.results);
-        setLoading(false);
-      })
-      .catch(err => {
-        console.error(err);
-        setLoading(false);
-      });
+    API.get("/screener/doji").then(res => {
+      setData(res.data);
+    });
   }, []);
 
-  if (loading) return <p>Loading...</p>;
-
   return (
-    <div>
-      {data.map((item, i) => (
-        <div key={i}>
-          <h3>{item.symbol}</h3>
-          <p>{item.crt_type} – {item.direction}</p>
-          <p>Entry: {item.entry} | SL: {item.sl} | Target: {item.target}</p>
-          <p>Grade: {item.grade}</p>
-        </div>
-      ))}
+    <div style={{ padding: 20 }}>
+      <h2>📊 Doji Screener (NSE)</h2>
+
+      <table width="100%" border="1" cellPadding="8">
+        <thead>
+          <tr>
+            <th>Symbol</th>
+            <th>Open</th>
+            <th>High</th>
+            <th>Low</th>
+            <th>Close</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          {data.map((row, i) => (
+            <tr key={i}>
+              <td>{row.symbol}</td>
+              <td>{row.open}</td>
+              <td>{row.high}</td>
+              <td>{row.low}</td>
+              <td>{row.close}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }
