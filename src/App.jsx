@@ -1,49 +1,42 @@
 import { useEffect, useState } from "react";
 
 export default function App() {
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [rows, setRows] = useState([]);
 
   useEffect(() => {
     fetch("https://crt-screener-backend.onrender.com/screener/doji")
       .then(res => res.json())
-      .then(json => {
-        setData(json);
-        setLoading(false);
+      .then(data => {
+        console.log("DATA:", data);
+        setRows(data);
       })
-      .catch(err => {
-        console.error(err);
-        setLoading(false);
-      });
+      .catch(err => console.error("ERROR:", err));
   }, []);
 
   return (
-    <div className="container">
+    <div style={{ padding: 20, color: "white" }}>
       <h1>CRT Screener</h1>
 
-      {loading && <p>Scanning NSE Stocks...</p>}
+      {rows.length === 0 && <p>No data loaded</p>}
 
-      <table>
+      <table border="1" cellPadding="10">
         <thead>
           <tr>
             <th>Symbol</th>
-            <th>CRT</th>
             <th>Open</th>
             <th>High</th>
             <th>Low</th>
             <th>Close</th>
           </tr>
         </thead>
-
         <tbody>
-          {data.map((row, i) => (
+          {rows.map((r, i) => (
             <tr key={i}>
-              <td>{row.symbol}</td>
-              <td>DOJI</td>
-              <td>{row.open}</td>
-              <td>{row.high}</td>
-              <td>{row.low}</td>
-              <td>{row.close}</td>
+              <td>{r.symbol}</td>
+              <td>{r.open}</td>
+              <td>{r.high}</td>
+              <td>{r.low}</td>
+              <td>{r.close}</td>
             </tr>
           ))}
         </tbody>
