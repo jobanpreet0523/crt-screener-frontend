@@ -1,11 +1,6 @@
-export async function fetchCRTResults({ market, timeframe }) {
-  const response = await fetch(
-    `https://YOUR-BACKEND-URL/api/crt-scan?market=${market}&tf=${timeframe}`
-  );
+const BASE_URL = "https://crt-screener-backend.onrender.com";
 
-  if (!response.ok) {
-    throw new Error("Scanner API failed");
-  }
-
-  return response.json();
+export async function getDojiStocks() {
+  const res = await fetch(`${BASE_URL}/screener/doji`);
+  return await res.json();
 }
