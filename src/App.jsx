@@ -1,7 +1,5 @@
-import Dashboard from "./Dashboard";
+import Screener from "./Screener";
 
-function App() {
-  return <Dashboard />;
+export default function App() {
+  return <Screener />;
 }
-
-export default App;
