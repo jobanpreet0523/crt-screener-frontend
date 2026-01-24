@@ -1,7 +1,3 @@
-import DojiTable from "./DojiTable";
-
 function App() {
-  return <DojiTable />;
-}
-
-export default App;
+  return (
+    <div style={{ padding: "20px", color: "white", background: "#0f
