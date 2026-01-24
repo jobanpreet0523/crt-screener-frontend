@@ -1,69 +1,12 @@
 <!DOCTYPE html>
-<html>
-<head>
-  <title>CRT Screener</title>
-  <style>
-    body {
-      font-family: Arial;
-      background: #0b1220;
-      color: #fff;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-    }
-    th, td {
-      padding: 10px;
-      border-bottom: 1px solid #222;
-      text-align: center;
-    }
-    th {
-      background: #111827;
-    }
-    tr:hover {
-      background: #1f2937;
-    }
-    .bullish { color: #22c55e; }
-    .bearish { color: #ef4444; }
-  </style>
-</head>
-
-<body>
-  <h2>📊 CRT Screener</h2>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Symbol</th>
-        <th>CRT</th>
-        <th>Open</th>
-        <th>High</th>
-        <th>Low</th>
-        <th>Close</th>
-      </tr>
-    </thead>
-    <tbody id="data"></tbody>
-  </table>
-
-  <script>
-    fetch("https://crt-screener-backend.onrender.com/scan?tf=daily")
-      .then(res => res.json())
-      .then(rows => {
-        const tbody = document.getElementById("data");
-        rows.forEach(r => {
-          const tr = document.createElement("tr");
-          tr.innerHTML = `
-            <td>${r.symbol}</td>
-            <td class="${r.crt.includes("Bullish") ? "bullish" : "bearish"}">${r.crt}</td>
-            <td>${r.open}</td>
-            <td>${r.high}</td>
-            <td>${r.low}</td>
-            <td>${r.close}</td>
-          `;
-          tbody.appendChild(tr);
-        });
-      });
-  </script>
-</body>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CRT Trading Dashboard</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
 </html>
