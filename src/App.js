@@ -5,7 +5,7 @@ function App() {
         padding: "20px",
         color: "white",
         background: "#0f172a",
-        minHeight: "100vh"
+        minHeight: "100vh",
       }}
     >
       <h1>CRT Screener</h1>
@@ -15,4 +15,3 @@ function App() {
 }
 
 export default App;
-
