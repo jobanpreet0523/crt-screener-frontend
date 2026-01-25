@@ -1,34 +1,23 @@
-import StatusBadge from "./StatusBadge";
-
 export default function ResultsTable({ data }) {
-  if (!data.length) {
-    return <p>No CRT found for selected timeframe.</p>;
-  }
+  if (!data.length) return <p>No results</p>;
 
   return (
-    <table>
+    <table border="1" cellPadding="8">
       <thead>
         <tr>
           <th>Symbol</th>
-          <th>Timeframe</th>
-          <th>Status</th>
-          <th>Chart</th>
+          <th>Close</th>
+          <th>Volume</th>
+          <th>Grade</th>
         </tr>
       </thead>
       <tbody>
-        {data.map((row, i) => (
-          <tr key={i}>
+        {data.map((row) => (
+          <tr key={row.symbol}>
             <td>{row.symbol}</td>
-            <td>{row.timeframe}</td>
-            <td><StatusBadge status={row.type} /></td>
-            <td>
-              <a
-                href={`https://www.tradingview.com/chart/?symbol=${row.symbol}`}
-                target="_blank"
-              >
-                View
-              </a>
-            </td>
+            <td>{row.close}</td>
+            <td>{row.volume}</td>
+            <td>{row.grade}</td>
           </tr>
         ))}
       </tbody>
