@@ -1,53 +1,8 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: 'Segoe UI', sans-serif;
-}
-
-body {
-  background: #0b0f19;
-  color: #ffffff;
-}
-
-.app {
-  padding: 20px;
-}
-
-header {
-  margin-bottom: 30px;
-}
-
-header h1 {
-  font-size: 28px;
-}
-
-header p {
-  opacity: 0.7;
-}
-
-.cards {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 15px;
-  margin-bottom: 30px;
-}
-
-.card {
-  background: #121826;
-  padding: 20px;
-  border-radius: 12px;
-  text-align: center;
-  cursor: pointer;
-  transition: 0.3s;
-}
-
-.card:hover {
-  background: #1a2138;
-}
-
-.panel {
-  background: #121826;
-  padding: 20px;
-  border-radius: 12px;
-}
+<div style={{
+  background: "linear-gradient(135deg, #2c3e50, #4ca1af)",
+  minHeight: "100vh",
+  padding: "20px",
+  color: "#fff"
+}}>
+  {/* Your content */}
+</div>
