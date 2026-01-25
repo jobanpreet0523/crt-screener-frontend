@@ -1,12 +1,46 @@
-html, body, #root {
-  width: 100%;
-  height: 100%;
+/* RESET */
+* {
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
 }
 
+/* FULL PAGE */
+html, body, #root {
+  height: 100%;
+  width: 100%;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+}
+
+/* BACKGROUND (FundedFirm Style) */
 body {
-  background: linear-gradient(135deg, #0a2540, #1f3a70); /* change colors here */
-  color: white;
-  font-family: Arial, sans-serif;
+  background: radial-gradient(
+      circle at top left,
+      #1b3a6b,
+      transparent 40%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      #0e6e6d,
+      transparent 40%
+    ),
+    linear-gradient(135deg, #0b1020, #0f172a);
+
+  color: #ffffff;
+}
+
+/* APP CONTAINER */
+.app {
+  min-height: 100vh;
+  padding: 40px;
+}
+
+/* HEADINGS */
+h1 {
+  font-size: 2.5rem;
+  margin-bottom: 10px;
+}
+
+p {
+  opacity: 0.8;
 }
