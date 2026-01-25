@@ -1,3 +1,4 @@
+import React from "react";
 export default function CrtTable({ data }) {
   if (data.length === 0) {
     return <p>No CRT setups found</p>;
