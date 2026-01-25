@@ -1,37 +1,12 @@
-body {
-  font-family: Arial;
-  background: #f4f6f8;
-}
-
-.app {
-  padding: 20px;
-}
-
-.controls {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 15px;
-}
-
-table {
+html, body, #root {
   width: 100%;
-  border-collapse: collapse;
-  background: white;
+  height: 100%;
+  margin: 0;
+  padding: 0;
 }
 
-th {
-  background: black;
+body {
+  background: linear-gradient(135deg, #0a2540, #1f3a70); /* change colors here */
   color: white;
-  padding: 10px;
-}
-
-td {
-  padding: 10px;
-  border-bottom: 1px solid #ddd;
-}
-
-.badge {
-  padding: 5px 10px;
-  color: white;
-  border-radius: 4px;
+  font-family: Arial, sans-serif;
 }
