@@ -1,25 +1,5 @@
 /* ===============================
-   GLOBAL THEME VARIABLES
-================================ */
-
-:root {
-  --bg-main: #0b1220;
-  --bg-gradient-top: #162033;
-  --bg-gradient-bottom: #020617;
-
-  --card-bg: rgba(255, 255, 255, 0.06);
-  --card-border: rgba(255, 255, 255, 0.12);
-
-  --text-main: #e5e7eb;
-  --text-muted: #9ca3af;
-
-  --accent-green: #22c55e;
-  --accent-blue: #38bdf8;
-  --accent-purple: #818cf8;
-}
-
-/* ===============================
-   RESET
+   GLOBAL RESET
 ================================ */
 
 * {
@@ -28,128 +8,207 @@
   box-sizing: border-box;
 }
 
-/* ===============================
-   BODY & BACKGROUND
-================================ */
+:root {
+  --bg-main: #0b1220;
+  --bg-soft: #0f172a;
 
-html,
+  --card-bg: rgba(255, 255, 255, 0.06);
+  --border-soft: rgba(255, 255, 255, 0.12);
+
+  --text-main: #e5e7eb;
+  --text-muted: #9ca3af;
+
+  --accent-blue: #38bdf8;
+  --accent-green: #22c55e;
+  --accent-yellow: #facc15;
+  --accent-red: #ef4444;
+}
+
 body {
-  height: 100%;
-  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont;
-  color: var(--text-main);
-
-  background:
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  background: radial-gradient(
+      1200px circle at top left,
+      #1e293b 0%,
+      transparent 40%
+    ),
     radial-gradient(
-      1200px 600px at top,
-      var(--bg-gradient-top),
-      var(--bg-main) 60%,
-      var(--bg-gradient-bottom)
+      1200px circle at bottom right,
+      #020617 0%,
+      #020617 60%
     );
-
-  background-attachment: fixed;
+  color: var(--text-main);
+  min-height: 100vh;
 }
 
 /* ===============================
-   APP LAYOUT
+   LAYOUT
 ================================ */
 
-.app {
+.layout {
+  display: flex;
   min-height: 100vh;
-  max-width: 1200px;
-  margin: auto;
-  padding: 40px 24px;
+}
+
+/* ===============================
+   SIDEBAR (PROP FIRM STYLE)
+================================ */
+
+.sidebar {
+  width: 260px;
+  padding: 28px 20px;
+
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.08),
+    rgba(255, 255, 255, 0.02)
+  );
+
+  backdrop-filter: blur(18px);
+  border-right: 1px solid var(--border-soft);
+}
+
+.sidebar h2 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 32px;
+}
+
+.nav-item {
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  border-radius: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  color: var(--text-main);
+  transition: all 0.2s ease;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nav-item.active {
+  background: linear-gradient(
+    135deg,
+    rgba(56, 189, 248, 0.25),
+    rgba(34, 197, 94, 0.25)
+  );
+  border: 1px solid var(--border-soft);
+}
+
+/* ===============================
+   MAIN CONTENT
+================================ */
+
+.main {
+  flex: 1;
+  padding: 40px;
 }
 
 /* ===============================
    HEADER
 ================================ */
 
-.header {
-  margin-bottom: 40px;
-}
-
 .header h1 {
-  font-size: 2.6rem;
+  font-size: 2rem;
   font-weight: 700;
-  letter-spacing: -0.5px;
 }
 
 .header p {
-  margin-top: 8px;
-  font-size: 1rem;
+  margin-top: 6px;
   color: var(--text-muted);
 }
 
 /* ===============================
-   CARD / PANEL
+   CARDS (GLASS)
 ================================ */
 
 .card {
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.08),
-    rgba(255, 255, 255, 0.03)
-  );
-
-  border: 1px solid var(--card-border);
-  border-radius: 16px;
-  padding: 24px;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-
-  box-shadow:
-    0 10px 30px rgba(0, 0, 0, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-}
-
-.card h2 {
-  font-size: 1.3rem;
-  margin-bottom: 10px;
-}
-
-.muted {
-  color: var(--text-muted);
+  background: var(--card-bg);
+  border: 1px solid var(--border-soft);
+  border-radius: 18px;
+  padding: 22px;
+  backdrop-filter: blur(16px);
 }
 
 /* ===============================
-   BUTTONS (OPTIONAL)
+   TABLE / SCANNER
 ================================ */
 
-.button {
-  display: inline-block;
-  padding: 10px 18px;
-  border-radius: 10px;
+.table-card {
+  margin-top: 30px;
+}
+
+.table-title {
+  font-size: 1.2rem;
   font-weight: 600;
-  cursor: pointer;
-  border: none;
-  color: #04130a;
-
-  background: linear-gradient(
-    135deg,
-    var(--accent-green),
-    var(--accent-blue)
-  );
-
-  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.35);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  margin-bottom: 14px;
 }
 
-.button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 28px rgba(34, 197, 94, 0.45);
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.table thead {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.table th,
+.table td {
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 0.95rem;
+}
+
+.table th {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.table tbody tr {
+  border-bottom: 1px solid var(--border-soft);
+  transition: background 0.15s ease;
+}
+
+.table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.06);
 }
 
 /* ===============================
-   RESPONSIVE
+   STATUS COLORS
 ================================ */
 
-@media (max-width: 768px) {
-  .header h1 {
-    font-size: 2rem;
-  }
-
-  .app {
-    padding: 28px 16px;
-  }
+.status-long {
+  color: var(--accent-green);
+  font-weight: 600;
 }
 
+.status-short {
+  color: var(--accent-red);
+  font-weight: 600;
+}
+
+.status-wait {
+  color: var(--accent-yellow);
+  font-weight: 600;
+}
+
+/* ===============================
+   SCROLLBAR (CLEAN)
+================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+}
