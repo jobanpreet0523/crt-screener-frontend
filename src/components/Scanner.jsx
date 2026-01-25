@@ -1,3 +1,4 @@
+import React from "react";
 import { useState } from "react";
 import { scanMarket } from "../api";
 import ResultsTable from "./ResultsTable";
