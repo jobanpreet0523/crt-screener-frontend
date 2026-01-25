@@ -1,3 +1,4 @@
+import React from "react";
 export default function ResultsTable({ data }) {
   if (!data.length) return <p>No results</p>;
 
