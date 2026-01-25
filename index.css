@@ -1,95 +1,29 @@
-/* RESET */
+:root {
+  --bg-start: #0f172a;   /* deep slate */
+  --bg-mid: #111827;     /* soft dark blue */
+  --bg-end: #020617;     /* near-black navy */
+
+  --card-bg: rgba(255, 255, 255, 0.05);
+  --border-soft: rgba(255, 255, 255, 0.1);
+  --text-main: #e5e7eb;
+  --text-muted: #9ca3af;
+  --accent: #22c55e;
+}
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-html, body, #root {
+html, body {
   height: 100%;
-  font-family: Inter, system-ui, sans-serif;
-}
-
-/* BACKGROUND WITH ANIMATION */
-body {
-  background: linear-gradient(270deg, #0b1020, #0f172a, #020617);
-  background-size: 600% 600%;
-  animation: gradientMove 18s ease infinite;
-  color: white;
-}
-
-@keyframes gradientMove {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-/* APP */
-.app {
-  min-height: 100vh;
-  padding: 40px;
-}
-
-h1 {
-  font-size: 2.6rem;
-  margin-bottom: 6px;
-}
-
-p {
-  opacity: 0.75;
-  margin-bottom: 30px;
-}
-
-/* CARD GRID */
-.cards {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 20px;
-}
-
-/* GLASS CARD */
-.glass-card {
-  position: relative;
-  padding: 24px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.35);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.glass-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 30px 60px rgba(0,0,0,0.5);
-}
-
-.glass-card h3 {
-  font-size: 1.4rem;
-  margin-bottom: 10px;
-}
-
-/* BADGES */
-.badge {
-  position: absolute;
-  top: 16px;
-  right: 16px;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-.aplus {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-}
-
-.a {
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-}
-
-.b {
-  background: linear-gradient(135deg, #facc15, #eab308);
-  color: #000;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont;
+  background: radial-gradient(
+      circle at top,
+      #1e293b 0%,
+      var(--bg-start) 40%,
+      var(--bg-end) 100%
+  );
+  color: var(--text-main);
 }
