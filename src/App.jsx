@@ -1,28 +1,17 @@
 export default function App() {
   return (
     <div className="app">
-      <h1>CRT Screener</h1>
-      <p>Professional Trading Dashboard</p>
+      <header className="header">
+        <h1>CRT Screener</h1>
+        <p>Institutional Market Structure Scanner</p>
+      </header>
 
-      <div className="cards">
-        <div className="glass-card">
-          <h3>NIFTY</h3>
-          <span className="badge aplus">A+</span>
-          <p>Bullish CRT</p>
-        </div>
-
-        <div className="glass-card">
-          <h3>BANKNIFTY</h3>
-          <span className="badge a">A</span>
-          <p>Liquidity Sweep</p>
-        </div>
-
-        <div className="glass-card">
-          <h3>FINNIFTY</h3>
-          <span className="badge b">B</span>
-          <p>Range Setup</p>
-        </div>
-      </div>
+      <section className="card">
+        <h2>Live Markets</h2>
+        <p className="muted">
+          Data will appear here once backend is connected.
+        </p>
+      </section>
     </div>
   );
 }
