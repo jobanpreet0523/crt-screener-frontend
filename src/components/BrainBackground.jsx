@@ -7,53 +7,95 @@ export default function BrainBackground() {
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
 
-    let width = (canvas.width = window.innerWidth);
-    let height = (canvas.height = window.innerHeight);
+    let w = (canvas.width = window.innerWidth);
+    let h = (canvas.height = window.innerHeight);
 
-    const nodes = Array.from({ length: 90 }, () => ({
-      x: Math.random() * width,
-      y: Math.random() * height,
-      vx: (Math.random() - 0.5) * 0.4,
-      vy: (Math.random() - 0.5) * 0.4,
-    }));
+    // Brain mask (ellipse-based brain shape)
+    function insideBrain(x, y) {
+      const cx = w / 2;
+      const cy = h / 2;
+      const rx = w * 0.28;
+      const ry = h * 0.38;
+      return (
+        ((x - cx) ** 2) / rx ** 2 +
+          ((y - cy) ** 2) / ry ** 2 <
+        1
+      );
+    }
 
-    function draw() {
-      ctx.clearRect(0, 0, width, height);
+    // Nodes
+    const nodes = [];
+    while (nodes.length < 110) {
+      const x = Math.random() * w;
+      const y = Math.random() * h;
+      if (insideBrain(x, y)) {
+        nodes.push({
+          x,
+          y,
+          vx: (Math.random() - 0.5) * 0.25,
+          vy: (Math.random() - 0.5) * 0.25,
+        });
+      }
+    }
+
+    let pulseIndex = 0;
+
+    function animate() {
+      ctx.clearRect(0, 0, w, h);
 
       nodes.forEach((n, i) => {
         n.x += n.vx;
         n.y += n.vy;
 
-        if (n.x < 0 || n.x > width) n.vx *= -1;
-        if (n.y < 0 || n.y > height) n.vy *= -1;
+        if (!insideBrain(n.x, n.y)) {
+          n.vx *= -1;
+          n.vy *= -1;
+        }
 
+        // Node
         ctx.beginPath();
-        ctx.arc(n.x, n.y, 1.5, 0, Math.PI * 2);
-        ctx.fillStyle = "#7aa2ff";
+        ctx.arc(n.x, n.y, 1.8, 0, Math.PI * 2);
+        ctx.fillStyle = "#8ab4ff";
         ctx.fill();
 
+        // Connections
         for (let j = i + 1; j < nodes.length; j++) {
           const m = nodes[j];
-          const dist = Math.hypot(n.x - m.x, n.y - m.y);
-          if (dist < 120) {
-            ctx.strokeStyle = `rgba(122,162,255,${1 - dist / 120})`;
+          const d = Math.hypot(n.x - m.x, n.y - m.y);
+
+          if (d < 110) {
+            const alpha = 1 - d / 110;
+            ctx.strokeStyle = `rgba(120,170,255,${alpha * 0.35})`;
             ctx.lineWidth = 0.5;
             ctx.beginPath();
             ctx.moveTo(n.x, n.y);
             ctx.lineTo(m.x, m.y);
             ctx.stroke();
+
+            // Signal pulse
+            if ((i + j + pulseIndex) % 140 === 0) {
+              const t = (pulseIndex % 60) / 60;
+              const px = n.x + (m.x - n.x) * t;
+              const py = n.y + (m.y - n.y) * t;
+
+              ctx.beginPath();
+              ctx.arc(px, py, 2.6, 0, Math.PI * 2);
+              ctx.fillStyle = "rgba(170,210,255,0.9)";
+              ctx.fill();
+            }
           }
         }
       });
 
-      requestAnimationFrame(draw);
+      pulseIndex++;
+      requestAnimationFrame(animate);
     }
 
-    draw();
+    animate();
 
     window.addEventListener("resize", () => {
-      width = canvas.width = window.innerWidth;
-      height = canvas.height = window.innerHeight;
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
     });
 
     return () => window.removeEventListener("resize", () => {});
