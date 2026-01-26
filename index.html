@@ -1,30 +1,30 @@
-<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>CRT Screener</title>
-  <link rel="icon" href="favicon.ico" />
   <link rel="stylesheet" href="index.css" />
+  <link rel="icon" href="favicon.ico" />
 </head>
 <body>
-  <div class="bg"></div>
 
-  <main class="ui">
-    <h1>CRT Screener</h1>
-    <p class="tagline">Institutional-grade execution intelligence</p>
+<div class="bg"></div>
 
-    <div class="controls">
-      <button onclick="setSignal('WEAK')">Weak</button>
-      <button onclick="setSignal('VALID')">Valid</button>
-      <button onclick="setSignal('A+')">A+</button>
-    </div>
+<div class="ui">
+  <h1>CRT Screener</h1>
+  <p>Institutional-grade execution intelligence</p>
 
-    <div id="status">NO SIGNAL</div>
-  </main>
+  <div class="controls">
+    <button onclick="setSignal('WEAK')">Weak</button>
+    <button onclick="setSignal('VALID')">Valid</button>
+    <button onclick="setSignal('A+')">A+</button>
+  </div>
 
-  <canvas id="brain" width="700" height="400"></canvas>
+  <div id="status">NO SIGNAL</div>
+</div>
 
-  <script src="brain.js"></script>
+<canvas id="brain" width="800" height="420"></canvas>
+
+<script src="brain.js"></script>
 </body>
 </html>
