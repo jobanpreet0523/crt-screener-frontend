@@ -10,35 +10,51 @@ export default function BrainBackground() {
     let w = (canvas.width = window.innerWidth);
     let h = (canvas.height = window.innerHeight);
 
-    // Brain mask (ellipse-based brain shape)
-    function insideBrain(x, y) {
-      const cx = w / 2;
-      const cy = h / 2;
-      const rx = w * 0.28;
-      const ry = h * 0.38;
+    const cx = w / 2;
+    const cy = h / 2;
+
+    // Left & Right brain lobes (two overlapping ellipses)
+    function insideLeftBrain(x, y) {
+      const rx = w * 0.22;
+      const ry = h * 0.34;
       return (
-        ((x - cx) ** 2) / rx ** 2 +
+        ((x - (cx - rx * 0.55)) ** 2) / rx ** 2 +
           ((y - cy) ** 2) / ry ** 2 <
         1
       );
     }
 
-    // Nodes
+    function insideRightBrain(x, y) {
+      const rx = w * 0.22;
+      const ry = h * 0.34;
+      return (
+        ((x - (cx + rx * 0.55)) ** 2) / rx ** 2 +
+          ((y - cy) ** 2) / ry ** 2 <
+        1
+      );
+    }
+
+    function insideBrain(x, y) {
+      return insideLeftBrain(x, y) || insideRightBrain(x, y);
+    }
+
+    // Create nodes
     const nodes = [];
-    while (nodes.length < 110) {
+    while (nodes.length < 130) {
       const x = Math.random() * w;
       const y = Math.random() * h;
       if (insideBrain(x, y)) {
         nodes.push({
           x,
           y,
-          vx: (Math.random() - 0.5) * 0.25,
-          vy: (Math.random() - 0.5) * 0.25,
+          vx: (Math.random() - 0.5) * 0.3,
+          vy: (Math.random() - 0.5) * 0.3,
+          lobe: insideLeftBrain(x, y) ? "L" : "R",
         });
       }
     }
 
-    let pulseIndex = 0;
+    let pulseTick = 0;
 
     function animate() {
       ctx.clearRect(0, 0, w, h);
@@ -55,51 +71,9 @@ export default function BrainBackground() {
         // Node
         ctx.beginPath();
         ctx.arc(n.x, n.y, 1.8, 0, Math.PI * 2);
-        ctx.fillStyle = "#8ab4ff";
+        ctx.fillStyle =
+          n.lobe === "L" ? "#8ab4ff" : "#9cf0ff";
         ctx.fill();
 
         // Connections
-        for (let j = i + 1; j < nodes.length; j++) {
-          const m = nodes[j];
-          const d = Math.hypot(n.x - m.x, n.y - m.y);
-
-          if (d < 110) {
-            const alpha = 1 - d / 110;
-            ctx.strokeStyle = `rgba(120,170,255,${alpha * 0.35})`;
-            ctx.lineWidth = 0.5;
-            ctx.beginPath();
-            ctx.moveTo(n.x, n.y);
-            ctx.lineTo(m.x, m.y);
-            ctx.stroke();
-
-            // Signal pulse
-            if ((i + j + pulseIndex) % 140 === 0) {
-              const t = (pulseIndex % 60) / 60;
-              const px = n.x + (m.x - n.x) * t;
-              const py = n.y + (m.y - n.y) * t;
-
-              ctx.beginPath();
-              ctx.arc(px, py, 2.6, 0, Math.PI * 2);
-              ctx.fillStyle = "rgba(170,210,255,0.9)";
-              ctx.fill();
-            }
-          }
-        }
-      });
-
-      pulseIndex++;
-      requestAnimationFrame(animate);
-    }
-
-    animate();
-
-    window.addEventListener("resize", () => {
-      w = canvas.width = window.innerWidth;
-      h = canvas.height = window.innerHeight;
-    });
-
-    return () => window.removeEventListener("resize", () => {});
-  }, []);
-
-  return <canvas ref={canvasRef} className="brain-canvas" />;
-}
+        for (let j = i + 1; j < nodes.length; j++)
