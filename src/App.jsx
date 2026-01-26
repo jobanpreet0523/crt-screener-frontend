@@ -5,7 +5,7 @@ function App() {
     <>
       <BrainBackground />
       <main>
-        <h1>CRT Screener is LIVE 🚀</h1>
+        {/* Your CRT UI here */}
       </main>
     </>
   );
