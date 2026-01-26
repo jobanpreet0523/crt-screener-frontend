@@ -84,4 +84,5 @@ export default function App() {
       });
 
       t += 0.02;
-      requestAnimationFrame(draw
+     requestAnimationFrame(draw);
+
