@@ -81,8 +81,9 @@ export default function App() {
         ctx.arc(n.x, n.y, n.r + pulse, 0, Math.PI * 2);
         ctx.fillStyle = "rgba(200,230,255,0.9)";
         ctx.fill();
-      });
+            t += 0.02;
+      requestAnimationFrame(draw);
+    }
 
-      t += 0.02;
-     requestAnimationFrame(draw);
+    draw();
 
