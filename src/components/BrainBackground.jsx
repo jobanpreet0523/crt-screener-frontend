@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 
 export default function BrainBackground({
-  signalStrength = 0, // 0 → 1 (CRT confidence)
-  isAPlus = false     // true when A+ setup detected
+  signalStrength = 0,
+  isAPlus = false,
 }) {
   const canvasRef = useRef(null);
 
@@ -43,7 +43,7 @@ export default function BrainBackground({
           y,
           vx: (Math.random() - 0.5) * 0.25,
           vy: (Math.random() - 0.5) * 0.25,
-          lobe: insideLeft(x, y) ? "L" : "R"
+          lobe: insideLeft(x, y) ? "L" : "R",
         });
       }
     }
@@ -52,7 +52,6 @@ export default function BrainBackground({
 
     function drawCorpusCallosum() {
       const glow = 0.3 + signalStrength * 0.7;
-
       ctx.beginPath();
       ctx.moveTo(cx - 40, cy);
       ctx.lineTo(cx + 40, cy);
@@ -67,7 +66,7 @@ export default function BrainBackground({
     function animate() {
       ctx.clearRect(0, 0, w, h);
 
-      // 🧠 Flash on A+ setup
+      // Flash on A+
       if (isAPlus) {
         ctx.fillStyle = "rgba(180,220,255,0.08)";
         ctx.fillRect(0, 0, w, h);
@@ -79,4 +78,61 @@ export default function BrainBackground({
         n.x += n.vx;
         n.y += n.vy;
 
-        if (!insid
+        if (!insideBrain(n.x, n.y)) {
+          n.vx *= -1;
+          n.vy *= -1;
+        }
+
+        // Node
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, 1.8, 0, Math.PI * 2);
+        ctx.fillStyle = n.lobe === "L" ? "#8ab4ff" : "#9cf0ff";
+        ctx.fill();
+
+        // Connections + pulses
+        for (let j = i + 1; j < nodes.length; j++) {
+          const m = nodes[j];
+          const d = Math.hypot(n.x - m.x, n.y - m.y);
+
+          if (d < 115) {
+            ctx.strokeStyle = "rgba(140,190,255,0.25)";
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(n.x, n.y);
+            ctx.lineTo(m.x, m.y);
+            ctx.stroke();
+
+            if (n.lobe !== m.lobe && (i + j + tick) % 140 === 0) {
+              const speed = 40 - signalStrength * 30;
+              const t = (tick % speed) / speed;
+
+              const px = n.x + (m.x - n.x) * t;
+              const py = n.y + (m.y - n.y) * t;
+
+              ctx.beginPath();
+              ctx.arc(px, py, 3.2, 0, Math.PI * 2);
+              ctx.fillStyle = "rgba(210,235,255,0.95)";
+              ctx.fill();
+            }
+          }
+        }
+      });
+
+      tick++;
+      requestAnimationFrame(animate);
+    }
+
+    animate();
+
+    window.addEventListener("resize", () => {
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+    });
+
+    return () => {
+      window.removeEventListener("resize", () => {});
+    };
+  }, [signalStrength, isAPlus]);
+
+  return <canvas ref={canvasRef} className="brain-canvas" />;
+}
