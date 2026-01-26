@@ -3,23 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <title>CRT Screener</title>
-  <link rel="stylesheet" href="index.css" />
-</head>
-<body>
 
-<canvas id="brain"></canvas>
+  <!-- Prevent favicon 404 -->
+  <link rel="icon" href="favicon.ico" />
 
-<div class="center-text">
-  <h1>CRT Screener</h1>
-  <p>Institutional-grade execution intelligence</p>
-
-  <div class="buttons">
-    <button onclick="setSignal('Weak')">Weak</button>
-    <button onclick="setSignal('Valid')">Valid</button>
-    <button onclick="setSignal('A+')">A+</button>
-  </div>
-</div>
-
-<script src="brain.js"></script>
-</body>
-</html>
+  <style>
+    body {
+      margin: 0;
+      background: radial-gradient(circle at center, #0b0f1a, #05070c);
+      color: white;
+      font-family: Inter, system-ui, sans-serif;
+      display: flex;
+      flex-d
