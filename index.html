@@ -14,4 +14,73 @@
       color: white;
       font-family: Inter, system-ui, sans-serif;
       display: flex;
-      flex-d
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    h1 {
+      margin-bottom: 4px;
+      letter-spacing: 1px;
+    }
+
+    p {
+      opacity: 0.7;
+      margin-bottom: 20px;
+    }
+
+    canvas {
+      width: 420px;
+      height: 420px;
+    }
+
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 12px;
+    }
+
+    button {
+      padding: 10px 18px;
+      background: #111;
+      border: 1px solid #333;
+      color: white;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      border-color: #00ff88;
+      color: #00ff88;
+    }
+
+    #signal {
+      margin-top: 14px;
+      font-size: 18px;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>CRT Screener</h1>
+  <p>Institutional-grade execution intelligence</p>
+
+  <canvas id="brain"></canvas>
+
+  <div class="controls">
+    <button onclick="setSignal('WEAK')">Weak</button>
+    <button onclick="setSignal('VALID')">Valid</button>
+    <button onclick="setSignal('A+')">A+</button>
+  </div>
+
+  <div id="signal">NO SIGNAL</div>
+
+  <script src="brain.js"></script>
+</body>
+</html>
+
