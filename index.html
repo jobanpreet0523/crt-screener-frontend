@@ -1,26 +1,19 @@
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>CRT Screener</title>
-
-  <!-- CSS -->
+  <link rel="icon" href="favicon.ico" />
   <link rel="stylesheet" href="index.css" />
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="/favicon.ico" />
 </head>
-
 <body>
-  <div class="app">
+  <div class="bg"></div>
 
+  <main class="ui">
     <h1>CRT Screener</h1>
-    <p class="subtitle">Institutional-grade execution intelligence</p>
+    <p class="tagline">Institutional-grade execution intelligence</p>
 
-    <!-- Brain Canvas -->
-    <canvas id="brain" width="420" height="420"></canvas>
-
-    <!-- Controls -->
     <div class="controls">
       <button onclick="setSignal('WEAK')">Weak</button>
       <button onclick="setSignal('VALID')">Valid</button>
@@ -28,9 +21,10 @@
     </div>
 
     <div id="status">NO SIGNAL</div>
-  </div>
+  </main>
 
-  <!-- Brain Animation Script -->
+  <canvas id="brain" width="700" height="400"></canvas>
+
   <script src="brain.js"></script>
 </body>
 </html>
