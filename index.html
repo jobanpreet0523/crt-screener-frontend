@@ -3,28 +3,134 @@
 <head>
   <meta charset="UTF-8" />
   <title>CRT Screener</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="/favicon.ico" />
+
+  <!-- Styles -->
   <link rel="stylesheet" href="index.css" />
-  <link rel="icon" href="favicon.ico" />
 </head>
 <body>
 
-<div class="bg"></div>
+  <!-- Cinematic background -->
+  <div class="bg-motion"></div>
 
-<div class="ui">
-  <h1>CRT Screener</h1>
-  <p>Institutional-grade execution intelligence</p>
+  <!-- UI -->
+  <div class="ui">
+    <h1>CRT Screener</h1>
+    <p class="subtitle">Institutional-grade execution intelligence</p>
 
-  <div class="controls">
-    <button onclick="setSignal('WEAK')">Weak</button>
-    <button onclick="setSignal('VALID')">Valid</button>
-    <button onclick="setSignal('A+')">A+</button>
+    <div class="buttons">
+      <button data-signal="weak">Weak</button>
+      <button data-signal="valid">Valid</button>
+      <button data-signal="a+">A+</button>
+    </div>
+
+    <div id="status">NO SIGNAL</div>
   </div>
 
-  <div id="status">NO SIGNAL</div>
-</div>
+  <!-- Brain Canvas -->
+  <canvas id="brain"></canvas>
 
-<canvas id="brain" width="800" height="420"></canvas>
+<script>
+/* ===========================
+   Brain Animation Engine
+   =========================== */
 
-<script src="brain.js"></script>
-</body>
-</html>
+const canvas = document.getElementById("brain");
+const ctx = canvas.getContext("2d");
+
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener("resize", resize);
+
+let signal = "none";
+let aPlusHoldStart = null;
+let flash = 0;
+let t = 0;
+
+/* Node network */
+const nodes = [];
+for (let i = 0; i < 120; i++) {
+  nodes.push({
+    x: Math.random(),
+    y: Math.random(),
+    vx: (Math.random() - 0.5) * 0.0005,
+    vy: (Math.random() - 0.5) * 0.0005,
+  });
+}
+
+document.querySelectorAll("button").forEach(btn => {
+  btn.onclick = () => {
+    signal = btn.dataset.signal;
+    document.getElementById("status").innerText =
+      signal === "a+" ? "A+ CONFIRMED" : signal.toUpperCase();
+
+    if (signal === "a+") {
+      aPlusHoldStart = performance.now();
+      flash = 1;
+    } else {
+      aPlusHoldStart = null;
+    }
+  };
+});
+
+function drawBrain() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  const cx = canvas.width / 2;
+  const cy = canvas.height / 2;
+  const scale = Math.min(canvas.width, canvas.height) * 0.35;
+
+  /* Flash on A+ */
+  if (flash > 0) {
+    ctx.fillStyle = `rgba(0,255,200,${flash})`;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    flash *= 0.9;
+  }
+
+  /* Lobes */
+  ctx.strokeStyle = "#4fd1ff";
+  ctx.lineWidth = 2;
+
+  ctx.beginPath();
+  ctx.ellipse(cx - scale * 0.35, cy, scale * 0.45, scale * 0.6, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.ellipse(cx + scale * 0.35, cy, scale * 0.45, scale * 0.6, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  /* Corpus Callosum Pulse Bridge */
+  const pulse = Math.sin(t * 3) * 10;
+  ctx.strokeStyle = "#00ffd5";
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(cx - 60, cy + pulse);
+  ctx.quadraticCurveTo(cx, cy - 40 - pulse, cx + 60, cy + pulse);
+  ctx.stroke();
+
+  /* Nodes */
+  nodes.forEach(n => {
+    n.x += n.vx;
+    n.y += n.vy;
+
+    if (n.x < 0 || n.x > 1) n.vx *= -1;
+    if (n.y < 0 || n.y > 1) n.vy *= -1;
+
+    const px = cx + (n.x - 0.5) * scale * 1.2;
+    const py = cy + (n.y - 0.5) * scale * 1.2;
+
+    ctx.fillStyle = "#7fffd4";
+    ctx.fillRect(px, py, 2, 2);
+  });
+
+  /* Lightning spike on A+ */
+  if (signal === "a+") {
+    ctx.strokeStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - 8
