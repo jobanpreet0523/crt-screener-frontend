@@ -1,11 +1,25 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>CRT Scanner</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <title>CRT Screener</title>
+  <link rel="stylesheet" href="index.css" />
+</head>
+<body>
+
+<canvas id="brain"></canvas>
+
+<div class="center-text">
+  <h1>CRT Screener</h1>
+  <p>Institutional-grade execution intelligence</p>
+
+  <div class="buttons">
+    <button onclick="setSignal('Weak')">Weak</button>
+    <button onclick="setSignal('Valid')">Valid</button>
+    <button onclick="setSignal('A+')">A+</button>
+  </div>
+</div>
+
+<script src="brain.js"></script>
+</body>
 </html>
