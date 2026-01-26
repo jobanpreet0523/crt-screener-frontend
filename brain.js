@@ -1,86 +1,81 @@
 const canvas = document.getElementById("brain");
 const ctx = canvas.getContext("2d");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+canvas.width = 420;
+canvas.height = 420;
 
-let nodes = [];
-let signalStrength = 1;
-let flash = false;
+let signal = "NONE";
+let pulseSpeed = 0.02;
 
-// --- Brain shape function ---
-function brainPoint(i, side) {
-  const angle = i * 0.3;
-  const x =
-    canvas.width / 2 +
-    side * (220 + Math.sin(angle * 2) * 30) * Math.cos(angle);
-  const y =
-    canvas.height / 2 +
-    (140 + Math.cos(angle * 3) * 20) * Math.sin(angle);
-  return { x, y };
+// Nodes inside brain
+const nodes = [];
+const NODE_COUNT = 60;
+
+for (let i = 0; i < NODE_COUNT; i++) {
+  nodes.push({
+    x: Math.random() * 260 - 130,
+    y: Math.random() * 300 - 150,
+    phase: Math.random() * Math.PI * 2
+  });
 }
 
-// --- Create nodes ---
-for (let i = 0; i < 90; i++) {
-  nodes.push({ ...brainPoint(i, -1), pulse: Math.random() * 100 });
-  nodes.push({ ...brainPoint(i, 1), pulse: Math.random() * 100 });
-}
-
-// --- Animation loop ---
+// MAIN DRAW LOOP
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.save();
+  ctx.translate(canvas.width / 2, canvas.height / 2);
 
-  // connections
-  for (let i = 0; i < nodes.length; i++) {
-    for (let j = i + 1; j < nodes.length; j++) {
-      const dx = nodes[i].x - nodes[j].x;
-      const dy = nodes[i].y - nodes[j].y;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-
-      if (dist < 90) {
-        ctx.strokeStyle = `rgba(0,180,255,${0.15 * signalStrength})`;
-        ctx.beginPath();
-        ctx.moveTo(nodes[i].x, nodes[i].y);
-        ctx.lineTo(nodes[j].x, nodes[j].y);
-        ctx.stroke();
-      }
-    }
-  }
-
-  // corpus callosum glow
-  ctx.strokeStyle = `rgba(0,220,255,${0.4 * signalStrength})`;
+  // Brain outline
+  ctx.strokeStyle = "#1f2b4d";
   ctx.lineWidth = 2;
   ctx.beginPath();
-  ctx.moveTo(canvas.width / 2, canvas.height / 2 - 120);
-  ctx.lineTo(canvas.width / 2, canvas.height / 2 + 120);
+  ctx.ellipse(0, 0, 150, 180, 0, 0, Math.PI * 2);
   ctx.stroke();
 
-  // nodes
-  nodes.forEach(n => {
-    n.pulse += 0.5 * signalStrength;
-    const r = 2 + Math.sin(n.pulse * 0.1) * 1.5;
+  // Corpus Callosum
+  ctx.strokeStyle = "#00ffcc";
+  ctx.shadowBlur = 20;
+  ctx.shadowColor = "#00ffcc";
+  ctx.beginPath();
+  ctx.moveTo(-30, 0);
+  ctx.bezierCurveTo(-10, -10, 10, 10, 30, 0);
+  ctx.stroke();
 
-    ctx.fillStyle = flash
-      ? "rgba(255,255,255,0.9)"
-      : "rgba(0,200,255,0.8)";
+  ctx.shadowBlur = 0;
+
+  // Nodes + pulses
+  nodes.forEach(n => {
+    n.phase += pulseSpeed;
+    const px = n.x + Math.sin(n.phase) * 4;
+    const py = n.y + Math.cos(n.phase) * 4;
 
     ctx.beginPath();
-    ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+    ctx.fillStyle = signal === "A+" ? "#00ff88" : "#4aa3ff";
+    ctx.arc(px, py, 3, 0, Math.PI * 2);
     ctx.fill();
   });
 
-  flash = false;
+  ctx.restore();
   requestAnimationFrame(draw);
 }
 
 draw();
 
-// --- Signal control ---
-function setSignal(type) {
-  if (type === "Weak") signalStrength = 0.5;
-  if (type === "Valid") signalStrength = 1;
+// GLOBAL SIGNAL FUNCTION (HTML → JS)
+window.setSignal = function(type) {
+  signal = type;
+
+  const el = document.getElementById("signal");
+  el.textContent = type;
+
   if (type === "A+") {
-    signalStrength = 2;
-    flash = true;
+    el.style.color = "#00ff88";
+    pulseSpeed = 0.08;
+  } else if (type === "VALID") {
+    el.style.color = "#ffaa00";
+    pulseSpeed = 0.04;
+  } else {
+    el.style.color = "#ff5555";
+    pulseSpeed = 0.02;
   }
-}
+};
