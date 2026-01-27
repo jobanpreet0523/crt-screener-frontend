@@ -1,136 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>CRT Screener</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CRT Screener</title>
 
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="/favicon.ico" />
+    <style>
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        background: #0b0f1a;
+        color: #ffffff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 20px;
+      }
 
-  <!-- Styles -->
-  <link rel="stylesheet" href="index.css" />
-</head>
-<body>
+      canvas {
+        border: 1px solid #2a2f45;
+        background: #050814;
+        margin-top: 20px;
+      }
 
-  <!-- Cinematic background -->
-  <div class="bg-motion"></div>
+      button {
+        margin-top: 16px;
+        padding: 10px 16px;
+        background: #4f46e5;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+      }
 
-  <!-- UI -->
-  <div class="ui">
+      button:hover {
+        background: #4338ca;
+      }
+
+      pre {
+        margin-top: 20px;
+        background: #0f172a;
+        padding: 12px;
+        border-radius: 6px;
+        max-width: 100%;
+        overflow-x: auto;
+      }
+    </style>
+  </head>
+
+  <body>
     <h1>CRT Screener</h1>
-    <p class="subtitle">Institutional-grade execution intelligence</p>
 
-    <div class="buttons">
-      <button data-signal="weak">Weak</button>
-      <button data-signal="valid">Valid</button>
-      <button data-signal="a+">A+</button>
-    </div>
+    <button id="scanBtn">Scan NAS100 (15m)</button>
 
-    <div id="status">NO SIGNAL</div>
-  </div>
+    <canvas id="chart" width="500" height="300"></canvas>
 
-  <!-- Brain Canvas -->
-  <canvas id="brain"></canvas>
+    <pre id="output">Waiting for scan...</pre>
 
-<script>
-/* ===========================
-   Brain Animation Engine
-   =========================== */
+    <!-- SAFE SCRIPT (NO HTML PARSE ERRORS) -->
+    <script>
+      const API_BASE = "https://YOUR-RENDER-URL.onrender.com"; // 🔴 CHANGE THIS
 
-const canvas = document.getElementById("brain");
-const ctx = canvas.getContext("2d");
+      const canvas = document.getElementById("chart");
+      const ctx = canvas.getContext("2d");
+      const output = document.getElementById("output");
+      const btn = document.getElementById("scanBtn");
 
-function resize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-resize();
-window.addEventListener("resize", resize);
+      function drawCrosshair(cx, cy) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-let signal = "none";
-let aPlusHoldStart = null;
-let flash = 0;
-let t = 0;
+        ctx.strokeStyle = "#22d3ee";
+        ctx.lineWidth = 2;
 
-/* Node network */
-const nodes = [];
-for (let i = 0; i < 120; i++) {
-  nodes.push({
-    x: Math.random(),
-    y: Math.random(),
-    vx: (Math.random() - 0.5) * 0.0005,
-    vy: (Math.random() - 0.5) * 0.0005,
-  });
-}
+        ctx.beginPath();
+        ctx.moveTo(cx - 8, cy);
+        ctx.lineTo(cx + 8, cy);
+        ctx.stroke();
 
-document.querySelectorAll("button").forEach(btn => {
-  btn.onclick = () => {
-    signal = btn.dataset.signal;
-    document.getElementById("status").innerText =
-      signal === "a+" ? "A+ CONFIRMED" : signal.toUpperCase();
+        ctx.beginPath();
+        ctx.moveTo(cx, cy - 8);
+        ctx.lineTo(cx, cy + 8);
+        ctx.stroke();
+      }
 
-    if (signal === "a+") {
-      aPlusHoldStart = performance.now();
-      flash = 1;
-    } else {
-      aPlusHoldStart = null;
-    }
-  };
-});
+      btn.addEventListener("click", async () => {
+        output.textContent = "Scanning...";
 
-function drawBrain() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+        try {
+          const res = await fetch(
+            `${API_BASE}/scan/crt?symbol=NAS100&timeframe=15m`
+          );
 
-  const cx = canvas.width / 2;
-  const cy = canvas.height / 2;
-  const scale = Math.min(canvas.width, canvas.height) * 0.35;
+          if (!res.ok) {
+            throw new Error("API error");
+          }
 
-  /* Flash on A+ */
-  if (flash > 0) {
-    ctx.fillStyle = `rgba(0,255,200,${flash})`;
-    ctx.fillRect(0,0,canvas.width,canvas.height);
-    flash *= 0.9;
-  }
+          const data = await res.json();
+          output.textContent = JSON.stringify(data, null, 2);
 
-  /* Lobes */
-  ctx.strokeStyle = "#4fd1ff";
-  ctx.lineWidth = 2;
-
-  ctx.beginPath();
-  ctx.ellipse(cx - scale * 0.35, cy, scale * 0.45, scale * 0.6, 0, 0, Math.PI * 2);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.ellipse(cx + scale * 0.35, cy, scale * 0.45, scale * 0.6, 0, 0, Math.PI * 2);
-  ctx.stroke();
-
-  /* Corpus Callosum Pulse Bridge */
-  const pulse = Math.sin(t * 3) * 10;
-  ctx.strokeStyle = "#00ffd5";
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.moveTo(cx - 60, cy + pulse);
-  ctx.quadraticCurveTo(cx, cy - 40 - pulse, cx + 60, cy + pulse);
-  ctx.stroke();
-
-  /* Nodes */
-  nodes.forEach(n => {
-    n.x += n.vx;
-    n.y += n.vy;
-
-    if (n.x < 0 || n.x > 1) n.vx *= -1;
-    if (n.y < 0 || n.y > 1) n.vy *= -1;
-
-    const px = cx + (n.x - 0.5) * scale * 1.2;
-    const py = cy + (n.y - 0.5) * scale * 1.2;
-
-    ctx.fillStyle = "#7fffd4";
-    ctx.fillRect(px, py, 2, 2);
-  });
-
-  /* Lightning spike on A+ */
-  if (signal === "a+") {
-    ctx.strokeStyle = "#ffffff";
-    ctx.beginPath();
-    ctx.moveTo(cx, cy - 8
+          // Draw example marker
+          drawCrosshair(250, 150);
+        } catch (err) {
+          output.textContent = "Error: " + err.message;
+        }
+      });
+    </script>
+  </body>
+</html>
