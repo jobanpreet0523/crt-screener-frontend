@@ -58,52 +58,36 @@
     <pre id="output">Waiting for scan...</pre>
 
     <!-- SAFE SCRIPT (NO HTML PARSE ERRORS) -->
-    <script>
-     const API_BASE = "https://crt-screener-api.onrender.com";
+    
+     <script>
+const API_BASE = "https://crt-screener-backend-1.onrender.com";
 
-      const canvas = document.getElementById("chart");
-      const ctx = canvas.getContext("2d");
-      const output = document.getElementById("output");
-      const btn = document.getElementById("scanBtn");
+async function scanMarket() {
+  const output = document.getElementById("output");
+  output.innerHTML = "⏳ Scanning...";
 
-      function drawCrosshair(cx, cy) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+  try {
+    const response = await fetch(`${API_BASE}/scan`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        market: "NAS100",
+        timeframe: "15m"
+      })
+    });
 
-        ctx.strokeStyle = "#22d3ee";
-        ctx.lineWidth = 2;
+    if (!response.ok) {
+      throw new Error("Backend error");
+    }
 
-        ctx.beginPath();
-        ctx.moveTo(cx - 8, cy);
-        ctx.lineTo(cx + 8, cy);
-        ctx.stroke();
+    const data = await response.json();
+    output.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
 
-        ctx.beginPath();
-        ctx.moveTo(cx, cy - 8);
-        ctx.lineTo(cx, cy + 8);
-        ctx.stroke();
-      }
-
-      btn.addEventListener("click", async () => {
-        output.textContent = "Scanning...";
-
-        try {
-          const res = await fetch(
-            `${API_BASE}/scan/crt?symbol=NAS100&timeframe=15m`
-          );
-
-          if (!res.ok) {
-            throw new Error("API error");
-          }
-
-          const data = await res.json();
-          output.textContent = JSON.stringify(data, null, 2);
-
-          // Draw example marker
-          drawCrosshair(250, 150);
-        } catch (err) {
-          output.textContent = "Error: " + err.message;
-        }
-      });
-    </script>
-  </body>
-</html>
+  } catch (err) {
+    output.innerHTML = "❌ Error: Failed to fetch (check console)";
+    console.error(err);
+  }
+}
+</script>
