@@ -60,33 +60,39 @@
     <!-- SAFE SCRIPT (NO HTML PARSE ERRORS) -->
     
      <script>
-const API_BASE = "https://crt-screener-backend-1.onrender.com";
-
 async function scanMarket() {
   const output = document.getElementById("output");
-  output.innerHTML = "⏳ Scanning...";
+  output.innerHTML = "Scanning...";
 
   try {
-    const response = await fetch(`${API_BASE}/scan`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        market: "NAS100",
-        timeframe: "15m"
-      })
-    });
+    const response = await fetch(
+      "https://crt-screener-backend-1.onrender.com/scan",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          market: "NAS100",
+          timeframe: "15m"
+        })
+      }
+    );
 
     if (!response.ok) {
-      throw new Error("Backend error");
+      throw new Error("API Error");
     }
 
     const data = await response.json();
-    output.innerHTML = `<pre>${JSON.stringify(data, null, 2)}</pre>`;
+    output.innerHTML = "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
 
   } catch (err) {
-    output.innerHTML = "❌ Error: Failed to fetch (check console)";
+    output.innerHTML = "❌ Failed to fetch backend";
+    console.error(err);
+  }
+}
+</script>
+ror: Failed to fetch (check console)";
     console.error(err);
   }
 }
