@@ -1,99 +1,29 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CRT Screener</title>
+<html>
+<head>
+<title>Stock Research</title>
+<link rel="stylesheet" href="style.css">
+</head>
 
-    <style>
-      body {
-        margin: 0;
-        font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-        background: #0b0f1a;
-        color: #ffffff;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        padding: 20px;
-      }
+<body>
 
-      canvas {
-        border: 1px solid #2a2f45;
-        background: #050814;
-        margin-top: 20px;
-      }
+<h1>Stock Research Platform</h1>
 
-      button {
-        margin-top: 16px;
-        padding: 10px 16px;
-        background: #4f46e5;
-        color: white;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-      }
+<input id="ticker" placeholder="Enter Stock (AAPL)">
+<button onclick="searchStock()">Search</button>
 
-      button:hover {
-        background: #4338ca;
-      }
+<div id="result"></div>
 
-      pre {
-        margin-top: 20px;
-        background: #0f172a;
-        padding: 12px;
-        border-radius: 6px;
-        max-width: 100%;
-        overflow-x: auto;
-      }
-    </style>
-  </head>
+<h2>Doji Screener</h2>
 
-  <body>
-    <h1>CRT Screener</h1>
+<button onclick="scan('1d')">1D</button>
+<button onclick="scan('1w')">1W</button>
+<button onclick="scan('1m')">1M</button>
+<button onclick="scan('3m')">3M</button>
 
-    <button id="scanBtn">Scan NAS100 (15m)</button>
+<div id="scanresult"></div>
 
-    <canvas id="chart" width="500" height="300"></canvas>
+<script src="app.js"></script>
 
-    <pre id="output">Waiting for scan...</pre>
-
-    <!-- SAFE SCRIPT (NO HTML PARSE ERRORS) -->
-    
-     <script>
-async function scanMarket() {
-  const output = document.getElementById("output");
-  output.innerHTML = "Scanning...";
-
-  try {
-    const response = await fetch(
-      "https://crt-screener-backend-1.onrender.com/scan",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          market: "NAS100",
-          timeframe: "15m"
-        })
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error("API Error");
-    }
-
-    const data = await response.json();
-    output.innerHTML = "<pre>" + JSON.stringify(data, null, 2) + "</pre>";
-
-  } catch (err) {
-    output.innerHTML = "❌ Failed to fetch backend";
-    console.error(err);
-  }
-}
-</script>
-ror: Failed to fetch (check console)";
-    console.error(err);
-  }
-}
-</script>
+</body>
+</html>
