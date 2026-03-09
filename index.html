@@ -1,18 +1,48 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-<title>Stock Research</title>
-<link rel="stylesheet" href="style.css">
+<title>Stock Research Platform</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#0b1220;
+color:white;
+text-align:center;
+}
+
+button{
+padding:10px;
+margin:5px;
+cursor:pointer;
+}
+
+input{
+padding:10px;
+}
+
+#result{
+margin-top:20px;
+}
+
+</style>
+
 </head>
 
 <body>
 
 <h1>Stock Research Platform</h1>
 
-<input id="ticker" placeholder="Enter Stock (AAPL)">
+<h2>Search Stock</h2>
+
+<input id="ticker" placeholder="Enter stock (AAPL)">
 <button onclick="searchStock()">Search</button>
 
 <div id="result"></div>
+
+<hr>
 
 <h2>Doji Screener</h2>
 
@@ -23,7 +53,64 @@
 
 <div id="scanresult"></div>
 
-<script src="app.js"></script>
+<hr>
+
+<h2>AI Research</h2>
+
+<input id="aiticker" placeholder="Enter stock">
+<button onclick="aiResearch()">Analyze</button>
+
+<div id="airesult"></div>
+
+<script>
+
+const API="YOUR_RENDER_URL"
+
+async function searchStock(){
+
+let ticker=document.getElementById("ticker").value
+
+let r=await fetch(`${API}/stock/${ticker}`)
+let data=await r.json()
+
+document.getElementById("result").innerHTML=`
+
+<h3>${data.name}</h3>
+
+Price: ${data.price}<br>
+Market Cap: ${data.marketCap}<br>
+PE Ratio: ${data.pe}<br>
+Sector: ${data.sector}
+
+`
+}
+
+async function scan(tf){
+
+let r=await fetch(`${API}/screener/doji/${tf}`)
+let data=await r.json()
+
+let html=""
+
+data.doji_stocks.forEach(s=>{
+html+=`<div>${s}</div>`
+})
+
+document.getElementById("scanresult").innerHTML=html
+}
+
+async function aiResearch(){
+
+let ticker=document.getElementById("aiticker").value
+
+let r=await fetch(`${API}/ai/${ticker}`)
+let data=await r.json()
+
+document.getElementById("airesult").innerText=data.analysis
+
+}
+
+</script>
 
 </body>
 </html>
