@@ -1,116 +1,208 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-<title>Stock Research Platform</title>
-
-<style>
-
-body{
-font-family:Arial;
-background:#0b1220;
-color:white;
-text-align:center;
-}
-
-button{
-padding:10px;
-margin:5px;
-cursor:pointer;
-}
-
-input{
-padding:10px;
-}
-
-#result{
-margin-top:20px;
-}
-
-</style>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chartink Replica - Doji Screener</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
+<body class="bg-[#f8f9fa] text-gray-800 font-sans antialiased" x-data="screenerApp()">
 
-<body>
+    <header class="bg-[#2c3e50] text-white shadow-md px-6 py-3 flex flex-wrap justify-between items-center">
+        <div class="flex items-center space-x-6">
+            <h1 class="text-xl font-bold tracking-tight text-emerald-400 cursor-pointer">CHARTINK <span class="text-xs text-gray-300 font-light">Clone</span></h1>
+            <nav class="hidden md:flex space-x-4 text-sm font-medium">
+                <a href="#" class="hover:text-emerald-400 transition">Dashboard</a>
+                <a href="#" class="text-emerald-400 border-b-2 border-emerald-400 pb-1">Charts</a>
+                <a href="#" class="hover:text-emerald-400 transition">Screeners</a>
+                <a href="#" class="hover:text-emerald-400 transition">Premium</a>
+            </nav>
+        </div>
+        <div class="flex items-center space-x-3 mt-2 sm:mt-0">
+            <button class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded">Create Scan</button>
+            <button class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold px-3 py-2 rounded">Login</button>
+        </div>
+    </header>
 
-<h1>Stock Research Platform</h1>
+    <main class="max-w-7xl mx-auto p-4 lg:p-6 space-y-6">
+        
+        <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-wrap justify-between items-center">
+            <div>
+                <h2 class="text-xl font-bold text-slate-800">Doji - 2 Candlestick Screener</h2>
+                <p class="text-xs text-gray-500 mt-1">Filters stocks forming precise equilibrium neutral doji patterns across selected timeframes.</p>
+            </div>
+            <div class="flex space-x-2 mt-3 sm:mt-0">
+                <button class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs px-3 py-1.5 rounded shadow-sm">★ Bookmark</button>
+                <button class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs px-3 py-1.5 rounded shadow-sm">🔗 Share</button>
+            </div>
+        </div>
 
-<h2>Search Stock</h2>
+        <div class="bg-white border border-gray-200 rounded-lg shadow-sm">
+            <div class="bg-slate-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center">
+                <span class="text-xs font-bold text-slate-700 uppercase tracking-wider">Filter Logic Engine</span>
+                <div class="flex bg-gray-200 p-0.5 rounded-md text-xs">
+                    <button @click="timeframe = '1D'" :class="timeframe === '1D' ? 'bg-white text-slate-900 shadow-sm' : 'text-gray-600'" class="px-3 py-1 rounded-md transition font-medium">Daily</button>
+                    <button @click="timeframe = '1W'" :class="timeframe === '1W' ? 'bg-white text-slate-900 shadow-sm' : 'text-gray-600'" class="px-3 py-1 rounded-md transition font-medium">Weekly</button>
+                    <button @click="timeframe = '1M'" :class="timeframe === '1M' ? 'bg-white text-slate-900 shadow-sm' : 'text-gray-600'" class="px-3 py-1 rounded-md transition font-medium">Monthly</button>
+                </div>
+            </div>
+            <div class="p-4 space-y-2 bg-[#fafbfc]">
+                <div class="flex items-center space-x-3 text-sm font-mono bg-white p-2.5 border border-gray-150 rounded shadow-sm">
+                    <span class="text-emerald-600 font-bold text-xs uppercase px-1.5 py-0.5 bg-emerald-50 rounded border border-emerald-200">Pass</span>
+                    <span class="text-slate-700 flex-1">Latest Close matches Latest Open within 0.1% of Close (Doji Body Rule)</span>
+                </div>
+                <div class="flex items-center space-x-3 text-sm font-mono bg-white p-2.5 border border-gray-150 rounded shadow-sm">
+                    <span class="text-emerald-600 font-bold text-xs uppercase px-1.5 py-0.5 bg-emerald-50 rounded border border-emerald-200">Pass</span>
+                    <span class="text-slate-700 flex-1">Latest Volume greater than 100,000 (Liquidity Rule)</span>
+                </div>
+                <div class="pt-2 flex justify-between">
+                    <button class="text-xs text-blue-600 hover:text-blue-800 font-medium">+ Add Filter Rule</button>
+                    <button class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-5 py-2 rounded shadow transition">Run Scan</button>
+                </div>
+            </div>
+        </div>
 
-<input id="ticker" placeholder="Enter stock (AAPL)">
-<button onclick="searchStock()">Search</button>
+        <div class="space-y-4">
+            <div class="border-b border-gray-200 flex space-x-6">
+                <button @click="activeTab = 'results'" :class="activeTab === 'results' ? 'border-b-2 border-emerald-600 text-emerald-600' : 'text-gray-500 hover:text-slate-800'" class="pb-2 text-sm font-semibold transition">
+                    Filtered Stocks (<span x-text="filteredStocks().length"></span>)
+                </button>
+                <button @click="activeTab = 'charts'" :class="activeTab === 'charts' ? 'border-b-2 border-emerald-600 text-emerald-600' : 'text-gray-500 hover:text-slate-800'" class="pb-2 text-sm font-semibold transition">
+                    Multi-Chart Gallery
+                </button>
+            </div>
 
-<div id="result"></div>
+            <div x-show="activeTab === 'results'" class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                <div class="p-4 bg-slate-50 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <input 
+                        type="text" 
+                        placeholder="Quick query symbol or company name..."
+                        x-model="searchQuery"
+                        class="w-full sm:w-72 px-3 py-1.5 bg-white border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                    />
+                    <div class="flex space-x-2 w-full sm:w-auto justify-end">
+                        <button class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs px-3 py-1.5 rounded transition">Excel Export</button>
+                        <button class="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs px-3 py-1.5 rounded transition">Print</button>
+                    </div>
+                </div>
 
-<hr>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-600 uppercase font-bold tracking-wider border-b border-gray-200 select-none">
+                                <th class="py-3 px-4 w-12 text-center">Sr.</th>
+                                <th @click="sort('name')" class="py-3 px-4 cursor-pointer hover:bg-slate-200 transition">Stock Name</th>
+                                <th @click="sort('symbol')" class="py-3 px-4 cursor-pointer hover:bg-slate-200 transition">Symbol</th>
+                                <th class="py-3 px-4">Links</th>
+                                <th @click="sort('price')" class="py-3 px-4 cursor-pointer hover:bg-slate-200 transition text-right">Price (INR)</th>
+                                <th @click="sort('chg')" class="py-3 px-4 cursor-pointer hover:bg-slate-200 transition text-right">Chg %</th>
+                                <th @click="sort('volume')" class="py-3 px-4 cursor-pointer hover:bg-slate-200 transition text-right">Volume</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-150 text-slate-700">
+                            <template x-for="(stock, index) in filteredStocks()" :key="stock.symbol">
+                                <tr class="hover:bg-slate-50/80 transition font-medium">
+                                    <td class="py-3 px-4 text-center text-gray-400 font-mono" x-text="index + 1"></td>
+                                    <td class="py-3 px-4 text-slate-900 font-semibold" x-text="stock.name"></td>
+                                    <td class="py-3 px-4 text-blue-600 font-bold hover:underline cursor-pointer" x-text="stock.symbol"></td>
+                                    <td class="py-3 px-4">
+                                        <span class="inline-flex space-x-1.5 text-[10px] text-gray-400 font-mono">
+                                            <a :href="'https://bseindia.com/stock-share-price/x/' + stock.bse_code" target="_blank" class="hover:text-blue-500 hover:underline">BSE</a>
+                                            <span>•</span>
+                                            <a href="#" class="hover:text-emerald-500 hover:underline">Chart</a>
+                                        </span>
+                                    </td>
+                                    <td class="py-3 px-4 text-right font-mono text-slate-900" x-text="'₹' + stock.price.toFixed(2)"></td>
+                                    <td :class="stock.chg >= 0 ? 'text-emerald-600' : 'text-red-500'" class="py-3 px-4 text-right font-mono font-bold" x-text="(stock.chg >= 0 ? '+' : '') + stock.per_chg"></td>
+                                    <td class="py-3 px-4 text-right font-mono text-gray-600" x-text="stock.volume.toLocaleString()"></td>
+                                </tr>
+                            </template>
+                            <template x-if="filteredStocks().length === 0">
+                                <tr>
+                                    <td colSpan="7" class="py-12 text-center text-sm text-gray-400 font-medium">No equities match the tracking filter criteria setup.</td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
 
-<h2>Doji Screener</h2>
+            <div x-show="activeTab === 'charts'" class="grid grid-cols-1 md:grid-cols-2 gap-4" style="display: none;">
+                <template x-for="stock in filteredStocks().slice(0, 4)" :key="'chart-'+stock.symbol">
+                    <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-col justify-between">
+                        <div class="flex justify-between items-center border-b border-gray-100 pb-2 mb-3">
+                            <span class="font-bold text-slate-800 text-sm" x-text="stock.symbol + ' - ' + stock.name"></span>
+                            <span class="text-xs text-emerald-600 font-mono font-bold" x-text="'₹' + stock.price"></span>
+                        </div>
+                        <div class="h-44 w-full bg-slate-900 rounded flex flex-col items-center justify-center relative overflow-hidden border border-slate-950">
+                            <div class="absolute top-2 left-3 text-[10px] text-slate-500 font-mono" x-text="'Candlestick Preview (' + timeframe + ')'"></div>
+                            
+                            <div class="w-0.5 h-28 bg-gray-400 absolute"></div>
+                            <div class="w-8 h-0.5 bg-white absolute"></div>
+                            
+                            <div class="absolute bottom-2 right-3 text-[11px] font-mono text-emerald-400 font-bold">Doji Formed</div>
+                        </div>
+                    </div>
+                </template>
+            </div>
 
-<button onclick="scan('1d')">1D</button>
-<button onclick="scan('1w')">1W</button>
-<button onclick="scan('1m')">1M</button>
-<button onclick="scan('3m')">3M</button>
+        </div>
+    </main>
 
-<div id="scanresult"></div>
+    <script>
+        function screenerApp() {
+            return {
+                activeTab: 'results',
+                timeframe: '1D',
+                searchQuery: '',
+                sortKey: 'symbol',
+                sortDirection: 'asc',
+                
+                // Full technical simulation dataset containing true Dojis and non-Dojis
+                stocks: [
+                    { name: "Reliance Industries Ltd.", symbol: "RELIANCE", price: 2450.50, chg: 0.02, volume: 3400000, per_chg: "0.02%", bse_code: "500325", isDoji: { '1D': true, '1W': true, '1M': false } },
+                    { name: "Tata Consultancy Services", symbol: "TCS", price: 3851.00, chg: 0.05, volume: 1200000, per_chg: "0.05%", bse_code: "532540", isDoji: { '1D': true, '1W': false, '1M': true } },
+                    { name: "HDFC Bank Ltd.", symbol: "HDFCBANK", price: 1511.00, chg: 0.07, volume: 4800000, per_chg: "0.07%", bse_code: "500180", isDoji: { '1D': true, '1W': true, '1M': true } },
+                    { name: "State Bank of India", symbol: "SBIN", price: 780.20, chg: -0.15, volume: 6100000, per_chg: "-0.15%", bse_code: "500112", isDoji: { '1D': true, '1W': true, '1M': false } },
+                    { name: "Infosys Ltd.", symbol: "INFY", price: 1455.00, chg: -1.24, volume: 2100000, per_chg: "-1.24%", bse_code: "500209", isDoji: { '1D': false, '1W': false, '1M': false } }, // Fails Doji Condition
+                    { name: "Wipro Ltd.", symbol: "WIPRO", price: 432.00, chg: -0.85, volume: 950000, per_chg: "-0.85%", bse_code: "507685", isDoji: { '1D': false, '1W': true, '1M': false } },
+                    { name: "ICICI Bank Ltd.", symbol: "ICICIBANK", price: 1120.40, chg: 0.64, volume: 3900000, per_chg: "+0.64%", bse_code: "532174", isDoji: { '1D': true, '1W': false, '1M': true } }
+                ],
 
-<hr>
+                // Handles searching, timeframe processing, and sorting columns
+                filteredStocks() {
+                    let data = this.stocks.filter(stock => stock.isDoji[this.timeframe]);
 
-<h2>AI Research</h2>
+                    if (this.searchQuery) {
+                        const query = this.searchQuery.toLowerCase();
+                        data = data.filter(stock => 
+                            stock.name.toLowerCase().includes(query) || 
+                            stock.symbol.toLowerCase().includes(query)
+                        );
+                    }
 
-<input id="aiticker" placeholder="Enter stock">
-<button onclick="aiResearch()">Analyze</button>
+                    data.sort((a, b) => {
+                        let modifier = this.sortDirection === 'asc' ? 1 : -1;
+                        if (a[this.sortKey] < b[this.sortKey]) return -1 * modifier;
+                        if (a[this.sortKey] > b[this.sortKey]) return 1 * modifier;
+                        return 0;
+                    });
 
-<div id="airesult"></div>
+                    return data;
+                },
 
-<script>
-
-const API="YOUR_RENDER_URL"
-
-async function searchStock(){
-
-let ticker=document.getElementById("ticker").value
-
-let r=await fetch(`${API}/stock/${ticker}`)
-let data=await r.json()
-
-document.getElementById("result").innerHTML=`
-
-<h3>${data.name}</h3>
-
-Price: ${data.price}<br>
-Market Cap: ${data.marketCap}<br>
-PE Ratio: ${data.pe}<br>
-Sector: ${data.sector}
-
-`
-}
-
-async function scan(tf){
-
-let r=await fetch(`${API}/screener/doji/${tf}`)
-let data=await r.json()
-
-let html=""
-
-data.doji_stocks.forEach(s=>{
-html+=`<div>${s}</div>`
-})
-
-document.getElementById("scanresult").innerHTML=html
-}
-
-async function aiResearch(){
-
-let ticker=document.getElementById("aiticker").value
-
-let r=await fetch(`${API}/ai/${ticker}`)
-let data=await r.json()
-
-document.getElementById("airesult").innerText=data.analysis
-
-}
-
-</script>
-
+                // Toggles sorting state directions
+                sort(key) {
+                    if (this.sortKey === key) {
+                        this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        this.sortKey = key;
+                        this.sortDirection = 'asc';
+                    }
+                }
+            }
+        }
+    </script>
 </body>
 </html>
