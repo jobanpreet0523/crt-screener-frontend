@@ -1,79 +1,214 @@
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Inter", system-ui, sans-serif;
-}
+import React, { useState, useMemo } from 'react';
 
-body {
-  background: #020617;
-  color: white;
-  overflow: hidden;
-}
+// Mock database simulating broad market data for scanning
+const MOCK_MARKET_DATA = [
+  { sr: 1, name: "Reliance Industries Ltd.", symbol: "RELIANCE", link: "https://tradingview.com", price: 2450.50, chg: 0.02, volume: 3400000, per_chg: "0.02%", bse_code: "500325" },
+  { sr: 2, name: "Tata Consultancy Services", symbol: "TCS", price: 3851.00, chg: 0.05, volume: 1200000, per_chg: "0.05%", bse_code: "532540" },
+  { sr: 3, name: "HDFC Bank Ltd.", symbol: "HDFCBANK", price: 1511.00, chg: 0.07, volume: 4800000, per_chg: "0.07%", bse_code: "500180" },
+  { sr: 4, name: "State Bank of India", symbol: "SBIN", price: 780.20, chg: 0.03, volume: 6100000, per_chg: "0.03%", bse_code: "500112" },
+  { sr: 5, name: "Infosys Ltd.", symbol: "INFY", price: 1455.00, chg: -1.24, volume: 2100000, per_chg: "-1.24%", bse_code: "500209" },
+  { sr: 6, name: "Wipro Ltd.", symbol: "WIPRO", price: 432.00, chg: -0.85, volume: 950000, per_chg: "-0.85%", bse_code: "507685" },
+  { sr: 7, name: "ICICI Bank Ltd.", symbol: "ICICIBANK", price: 1120.40, chg: 0.04, volume: 3900000, per_chg: "0.04%", bse_code: "532174" },
+];
 
-/* Cinematic motion background */
-.bg-motion {
-  position: fixed;
-  inset: 0;
-  background:
-    radial-gradient(circle at 20% 30%, #061a33, transparent 40%),
-    radial-gradient(circle at 80% 70%, #021024, transparent 40%);
-  animation: drift 20s linear infinite;
-  z-index: 0;
-}
+export default function ChartinkReplica() {
+  const [activeTab, setActiveTab] = useState('results');
+  const [timeframe, setTimeframe] = useState('daily');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: 'symbol', direction: 'asc' });
 
-@keyframes drift {
-  0% { transform: scale(1) translate(0,0); }
-  50% { transform: scale(1.05) translate(-2%, -2%); }
-  100% { transform: scale(1) translate(0,0); }
-}
+  // Filter conditions configurations matching Chartink logic syntax
+  const [conditions, setConditions] = useState([
+    { id: 1, type: "pass", text: "Latest Close close matches Latest Open open within 0.1% of Close" },
+    { id: 2, type: "pass", text: "Latest Volume greater than 100000" }
+  ]);
 
-/* UI */
-.ui {
-  position: relative;
-  z-index: 2;
-  text-align: center;
-  margin-top: 40px;
-}
+  // Handle Sort column clicks
+  const handleSort = (key) => {
+    let direction = 'asc';
+    if (sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
 
-h1 {
-  font-size: 2.6rem;
-  letter-spacing: 1px;
-}
+  // Processing calculations for the grid display
+  const processedData = useMemo(() => {
+    let results = [...MOCK_MARKET_DATA];
 
-.subtitle {
-  opacity: 0.7;
-  margin-top: 6px;
-}
+    // Search query engine filter
+    if (searchQuery) {
+      results = results.filter(item => 
+        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.symbol.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
 
-.buttons {
-  margin-top: 20px;
-}
+    // Sort order management
+    results.sort((a, b) => {
+      if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (a[sortConfig.key] > b[sortConfig.key]) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
 
-button {
-  background: #061a33;
-  border: 1px solid #1e3a8a;
-  color: white;
-  padding: 8px 18px;
-  margin: 0 6px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
+    return results;
+  }, [searchQuery, sortConfig]);
 
-button:hover {
-  background: #0a2a55;
-}
+  return (
+    <div className="min-h-screen bg-[#f8fa9] text-gray-800 font-sans">
+      {/* Top Main Navigation Bar */}
+      <header className="bg-[#2c3e50] text-white shadow-md px-6 py-3 flex flex-wrap justify-between items-center">
+        <div className="flex items-center space-x-6">
+          <h1 className="text-xl font-bold tracking-tight text-emerald-400 cursor-pointer">CHARTINK <span className="text-xs text-gray-300 font-light">Pro Edition</span></h1>
+          <nav className="hidden md:flex space-x-4 text-sm font-medium">
+            <a href="#" className="hover:text-emerald-400 transition">Dashboard</a>
+            <a href="#" className="text-emerald-400 border-b-2 border-emerald-400 pb-1">Charts</a>
+            <a href="#" className="hover:text-emerald-400 transition">Screeners</a>
+            <a href="#" className="hover:text-emerald-400 transition">Premium</a>
+          </nav>
+        </div>
+        <div className="flex items-center space-x-3 mt-2 sm:mt-0">
+          <button className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded">Create Scan</button>
+          <button className="bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold px-3 py-2 rounded">Login / Register</button>
+        </div>
+      </header>
 
-#status {
-  margin-top: 16px;
-  letter-spacing: 3px;
-  opacity: 0.8;
-}
+      <main className="max-w-7xl mx-auto p-4 lg:p-6 space-y-6">
+        {/* Screener Meta Title Block */}
+        <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-wrap justify-between items-center">
+          <div>
+            <h2 className="text-xl font-bold text-slate-800">Doji - 2 Candlestick Screener</h2>
+            <p className="text-xs text-gray-500 mt-1">Filters stocks forming precise equilibrium neutral doji patterns on customizable settlement windows.</p>
+          </div>
+          <div className="flex space-x-2 mt-3 sm:mt-0">
+            <button className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs px-3 py-1.5 rounded shadow-sm">★ Bookmark</button>
+            <button className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs px-3 py-1.5 rounded shadow-sm">🔗 Share</button>
+          </div>
+        </div>
 
-/* Canvas */
-canvas {
-  position: fixed;
-  inset: 0;
-  z-index: 1;
+        {/* Chartink Strategy Filter Logic Query Block */}
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm">
+          <div className="bg-slate-50 px-4 py-3 border-b border-gray-200 flex justify-between items-center">
+            <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">Filter Logic Engine</span>
+            <div className="flex bg-gray-200 p-0.5 rounded-md text-xs">
+              <button onClick={() => setTimeframe('daily')} className={`px-3 py-1 rounded-md transition font-medium ${timeframe === 'daily' ? 'bg-white text-slate-900 shadow-sm' : 'text-gray-600'}`}>Daily</button>
+              <button onClick={() => setTimeframe('weekly')} className={`px-3 py-1 rounded-md transition font-medium ${timeframe === 'weekly' ? 'bg-white text-slate-900 shadow-sm' : 'text-gray-600'}`}>Weekly</button>
+              <button onClick={() => setTimeframe('monthly')} className={`px-3 py-1 rounded-md transition font-medium ${timeframe === 'monthly' ? 'bg-white text-slate-900 shadow-sm' : 'text-gray-600'}`}>Monthly</button>
+            </div>
+          </div>
+          <div className="p-4 space-y-2 bg-[#fafbfc]">
+            {conditions.map((condition) => (
+              <div key={condition.id} className="flex items-center space-x-3 text-sm font-mono bg-white p-2.5 border border-gray-150 rounded shadow-2xs">
+                <span className="text-emerald-600 font-bold text-xs uppercase px-1.5 py-0.5 bg-emerald-50 rounded border border-emerald-200">{condition.type}</span>
+                <span className="text-slate-700 flex-1">{condition.text}</span>
+                <button className="text-gray-300 hover:text-red-500 transition text-xs">✕</button>
+              </div>
+            ))}
+            <div className="pt-2 flex justify-between">
+              <button className="text-xs text-blue-600 hover:text-blue-800 font-medium">+ Add Query Filter Rule</button>
+              <button className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-5 py-2 rounded shadow-xs transition">Run Scan</button>
+            </div>
+          </div>
+        </div>
+
+        {/* Data Tabs System */}
+        <div className="space-y-4">
+          <div className="border-b border-gray-200 flex space-x-6">
+            <button onClick={() => setActiveTab('results')} className={`pb-2 text-sm font-semibold transition ${activeTab === 'results' ? 'border-b-2 border-emerald-600 text-emerald-600' : 'text-gray-500 hover:text-slate-800'}`}>
+              Filtered Stocks ({processedData.length})
+            </button>
+            <button onClick={() => setActiveTab('charts')} className={`pb-2 text-sm font-semibold transition ${activeTab === 'charts' ? 'border-b-2 border-emerald-600 text-emerald-600' : 'text-gray-500 hover:text-slate-800'}`}>
+              Multi-Chart Gallery
+            </button>
+          </div>
+
+          {activeTab === 'results' && (
+            <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+              {/* Internal Filtering Panel Tools */}
+              <div className="p-4 bg-slate-50 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-3">
+                <input 
+                  type="text" 
+                  placeholder="Quick query symbol or company name..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full sm:w-72 px-3 py-1.5 bg-white border border-gray-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-emerald-500 focus:border-emerald-500"
+                />
+                <div className="flex space-x-2 w-full sm:w-auto justify-end">
+                  <button className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs px-3 py-1.5 rounded transition">Excel Export</button>
+                  <button className="bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs px-3 py-1.5 rounded transition">Print</button>
+                </div>
+              </div>
+
+              {/* Core Output Metrics Table Container */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-slate-100 text-slate-600 uppercase font-bold tracking-wider border-b border-gray-200 select-none">
+                      <th className="py-3 px-4 w-12 text-center">Sr.</th>
+                      <th onClick={() => handleSort('name')} className="py-3 px-4 cursor-pointer hover:bg-slate-200 transition">Stock Name</th>
+                      <th onClick={() => handleSort('symbol')} className="py-3 px-4 cursor-pointer hover:bg-slate-200 transition">Symbol</th>
+                      <th className="py-3 px-4">Links</th>
+                      <th onClick={() => handleSort('price')} className="py-3 px-4 cursor-pointer hover:bg-slate-200 transition text-right">Price (INR)</th>
+                      <th onClick={() => handleSort('chg')} className="py-3 px-4 cursor-pointer hover:bg-slate-200 transition text-right">Chg %</th>
+                      <th onClick={() => handleSort('volume')} className="py-3 px-4 cursor-pointer hover:bg-slate-200 transition text-right">Volume</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-150 text-slate-700">
+                    {processedData.length > 0 ? (
+                      processedData.map((stock, i) => (
+                        <tr key={stock.symbol} className="hover:bg-slate-50/80 transition font-medium">
+                          <td className="py-3 px-4 text-center text-gray-400 font-mono">{i + 1}</td>
+                          <td className="py-3 px-4 text-slate-900 font-semibold">{stock.name}</td>
+                          <td className="py-3 px-4 text-blue-600 font-bold hover:underline cursor-pointer">{stock.symbol}</td>
+                          <td className="py-3 px-4">
+                            <span className="inline-flex space-x-1.5 text-[10px] text-gray-400 font-mono">
+                              <a href={`https://bseindia.com/stock-share-price/x/${stock.bse_code}`} target="_blank" rel="noreferrer" className="hover:text-blue-500 hover:underline">BSE</a>
+                              <span>•</span>
+                              <a href="#" className="hover:text-emerald-500 hover:underline">Chart</a>
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-right font-mono text-slate-900">₹{stock.price.toFixed(2)}</td>
+                          <td className={`py-3 px-4 text-right font-mono font-bold ${stock.chg >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                            {stock.chg >= 0 ? `+${stock.per_chg}` : stock.per_chg}
+                          </td>
+                          <td className="py-3 px-4 text-right font-mono text-gray-600">{stock.volume.toLocaleString()}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="7" className="py-12 text-center text-sm text-gray-400 font-medium">No equities found matching current tracking metrics filter setup.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'charts' && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {processedData.slice(0, 4).map((stock) => (
+                <div key={stock.symbol} className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-col justify-between">
+                  <div className="flex justify-between items-center border-b border-gray-100 pb-2 mb-3">
+                    <span className="font-bold text-slate-800 text-sm">{stock.symbol} - {stock.name}</span>
+                    <span className="text-xs text-emerald-600 font-mono font-bold">₹{stock.price}</span>
+                  </div>
+                  {/* Simulation of Candlestick Mini Engine Canvas View */}
+                  <div className="h-44 w-full bg-slate-900 rounded flex flex-col items-center justify-center relative overflow-hidden border border-slate-950">
+                    <div className="absolute top-2 left-3 text-[10px] text-slate-500 font-mono">Candlestick Preview Panel (1D)</div>
+                    
+                    {/* Simulated Doji Graphics Components */}
+                    <div className="w-0.5 h-28 bg-gray-400 absolute"></div>
+                    <div className="w-8 h-0.5 bg-white absolute"></div>
+                    
+                    <div className="absolute bottom-2 right-3 text-[11px] font-mono text-emerald-400 font-bold">Doji Confirmed</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
+  );
 }
