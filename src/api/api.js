@@ -1,129 +1,91 @@
-import { useState, useEffect, useCallback } from "react";
-import {
-  fetchStatus, fetchIndices, fetchQuote,
-  fetchScan, fetchCRT, fetchStock, fetchAI, fetchFinancials
-} from "./api";
-import Screener   from "./components/Screener";
-import StockDetail from "./components/StockDetail";
-import AIResearch  from "./components/AIResearch";
-import styles      from "./App.module.css";
+// ============================================================
+// CRT Stock Research Platform — Unified API Router (src/api.js)
+// Connects your Vercel Web App to your Live Render Backend
+// ============================================================
 
-const TABS = [
-  { id: "screener",  label: "📊 Screener" },
-  { id: "crt",       label: "🎯 CRT Scan" },
-  { id: "search",    label: "🔍 Stock Lookup" },
-  { id: "ai",        label: "🤖 AI Research" },
-];
+// Your live Python server running on Render cloud
+const API_BASE_URL = "https://crt-screener-backend-1.onrender.com";
 
-const TICKER_SYMS = "RELIANCE,TCS,HDFCBANK,INFY,ICICIBANK,SBIN,WIPRO,AXISBANK,TATAMOTORS,ITC,LT,MARUTI,TITAN";
+/**
+ * 1. DOJI SCREENER ENDPOINT
+ * Triggered when clicking the 1D, 1W, 1M, or 3M timeframe buttons.
+ * Maps UI formats (e.g., '1D') to lowercase backend keys ('1d').
+ */
+export const fetchDojiScan = async (timeframe = "1D", market = "NSE") => {
+  try {
+    const cleanTf = timeframe.toLowerCase();
+    const response = await fetch(
+      `${API_BASE_URL}/scan?type=doji&tf=${cleanTf}&market=${market}&limit=30`
+    );
 
-export default function App() {
-  const [tab,      setTab]     = useState("screener");
-  const [mktOpen,  setMktOpen] = useState(null);
-  const [istTime,  setIstTime] = useState("");
-  const [indices,  setIndices] = useState(null);
-  const [ticker,   setTicker]  = useState([]);
-  const [backendOk,setBackend] = useState(null);
+    if (!response.ok) {
+      throw new Error(`Screener server responded with status: ${response.status}`);
+    }
 
-  // ── check backend + market status ──────────────────────────
-  useEffect(() => {
-    fetchStatus()
-      .then(d => { setMktOpen(d.market_open); setIstTime(d.ist_time); setBackend(true); })
-      .catch(()  => setBackend(false));
-    fetchIndices()
-      .then(d => setIndices(d))
-      .catch(()  => {});
-    fetchQuote(TICKER_SYMS, "NSE")
-      .then(d => setTicker(d.quotes || []))
-      .catch(()  => {});
-  }, []);
+    const data = await response.json();
+    return {
+      ok: true,
+      results: data.results || [],
+      count: data.count || 0
+    };
+  } catch (error) {
+    console.error("Error running Doji Screener pipeline:", error);
+    return { ok: false, results: [], error: error.message };
+  }
+};
 
-  // IST clock update
-  useEffect(() => {
-    const id = setInterval(() => {
-      const now = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
-      setIstTime(now.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true }));
-      const h = now.getHours(), m = now.getMinutes(), wd = now.getDay();
-      setMktOpen(wd >= 1 && wd <= 5 && (h > 9 || (h === 9 && m >= 15)) && (h < 15 || (h === 15 && m <= 30)));
-    }, 30000);
-    return () => clearInterval(id);
-  }, []);
+/**
+ * 2. SEARCH STOCK/QUOTES ENDPOINT
+ * Triggered by the top search bar to check stock prices and daily changes.
+ */
+export const fetchStockQuote = async (ticker, market = "NSE") => {
+  if (!ticker) return { ok: false, error: "Ticker symbol is required" };
+  
+  try {
+    const cleanTicker = ticker.trim().toUpperCase();
+    const response = await fetch(
+      `${API_BASE_URL}/quote?symbols=${cleanTicker}&market=${market}`
+    );
 
-  return (
-    <div className={styles.app}>
-      {/* ── BACKGROUND ── */}
-      <div className={styles.bgMotion} />
+    if (!response.ok) {
+      throw new Error(`Quote server responded with status: ${response.status}`);
+    }
 
-      {/* ── TOP NAV ── */}
-      <header className={styles.header}>
-        <div className={styles.headerLeft}>
-          <span className={styles.logo}>Stock<span>Research</span></span>
-          <nav className={styles.nav}>
-            {TABS.map(t => (
-              <button
-                key={t.id}
-                className={`${styles.navBtn} ${tab === t.id ? styles.navActive : ""}`}
-                onClick={() => setTab(t.id)}
-              >{t.label}</button>
-            ))}
-          </nav>
-        </div>
+    const data = await response.json();
+    return {
+      ok: true,
+      quotes: data.quotes || []
+    };
+  } catch (error) {
+    console.error(`Error looking up stock quote for ${ticker}:`, error);
+    return { ok: false, quotes: [], error: error.message };
+  }
+};
 
-        <div className={styles.headerRight}>
-          {indices && (
-            <div className={styles.indexBar}>
-              {indices.nifty50 && (
-                <span>
-                  NIFTY <b>{indices.nifty50.price.toLocaleString("en-IN")}</b>{" "}
-                  <span className={indices.nifty50.change >= 0 ? styles.up : styles.dn}>
-                    {indices.nifty50.change >= 0 ? "▲" : "▼"}{Math.abs(indices.nifty50.change)}%
-                  </span>
-                </span>
-              )}
-              {indices.sensex && (
-                <span>
-                  SENSEX <b>{indices.sensex.price.toLocaleString("en-IN")}</b>{" "}
-                  <span className={indices.sensex.change >= 0 ? styles.up : styles.dn}>
-                    {indices.sensex.change >= 0 ? "▲" : "▼"}{Math.abs(indices.sensex.change)}%
-                  </span>
-                </span>
-              )}
-            </div>
-          )}
-          <span className={`${styles.mktPill} ${mktOpen ? styles.mktOpen : styles.mktClosed}`}>
-            ⬤ {mktOpen ? "Market Open" : "Market Closed"}
-          </span>
-          <span className={styles.mktTime}>{istTime} IST</span>
-          {backendOk === false && (
-            <span className={styles.backendWarn}>⚠ Backend Offline</span>
-          )}
-        </div>
-      </header>
+/**
+ * 3. AI RESEARCH ANALYZER ENDPOINT
+ * Triggered by the bottom AI block to run technical, fundamental, and risk matrices.
+ */
+export const fetchAIAnalysis = async (ticker, market = "NSE") => {
+  if (!ticker) return { ok: false, error: "Ticker symbol is required" };
 
-      {/* ── TICKER BAR ── */}
-      {ticker.length > 0 && (
-        <div className={styles.tickerBar}>
-          <div className={styles.tickerTrack}>
-            {[...ticker, ...ticker].map((q, i) => (
-              <span key={i} className={styles.tickItem}>
-                <b>{q.symbol}</b>
-                <span> ₹{q.price?.toFixed(2)}</span>
-                <span className={q.change >= 0 ? styles.up : styles.dn}>
-                  {" "}{q.change >= 0 ? "+" : ""}{q.change?.toFixed(2)}%
-                </span>
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
+  try {
+    const cleanTicker = ticker.trim().toUpperCase();
+    const response = await fetch(
+      `${API_BASE_URL}/ai/${cleanTicker}?market=${market}`
+    );
 
-      {/* ── MAIN ── */}
-      <main className={styles.main}>
-        {tab === "screener" && <Screener />}
-        {tab === "crt"      && <Screener crtMode />}
-        {tab === "search"   && <StockDetail />}
-        {tab === "ai"       && <AIResearch />}
-      </main>
-    </div>
-  );
-}
+    if (!response.ok) {
+      throw new Error(`AI Engine server responded with status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return {
+      ok: true,
+      analysisData: data
+    };
+  } catch (error) {
+    console.error(`Error processing AI Research for ${ticker}:`, error);
+    return { ok: false, analysisData: null, error: error.message };
+  }
+};
