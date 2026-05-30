@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import DojiScreener from './DojiScreener';
-import './style.css'; // This keeps your global styles linked safely!
+import DojiScreener from './crt-dashboard/src/DojiScreener';
+import './crt-dashboard/src/index.css';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
