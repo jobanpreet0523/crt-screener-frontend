@@ -1,10 +1,272 @@
-import React from "react";
-import ReactDOM from "react-dom/client";
-import App from "./App";
-import "./index.css";
+import React, { useState, useEffect } from 'react';
+import { fetchDojiScan, fetchStockQuote, fetchAIAnalysis } from '../src/api';
 
-ReactDOM.createRoot(document.getElementById("root")).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+// Interface definitions for strict type safety
+interface StockResult {
+  symbol: string;
+  sector: string;
+  price: number;
+  change: number;
+  volume: number;
+}
+
+interface AIAnalysisData {
+  ticker: string;
+  name: string;
+  signal: string;
+  analysis: {
+    business: string;
+    technicals: { rsi: number; momentum: string };
+    fundamentals: { sector: string; pe_ratio: number; roe: string; dividend: string };
+    risks: string[];
+  };
+}
+
+export default function StockResearchPlatform() {
+  // --- Doji Screener States ---
+  const [timeframe, setTimeframe] = useState<string>('1D');
+  const [screenerStocks, setScreenerStocks] = useState<StockResult[]>([]);
+  const [screenerLoading, setScreenerLoading] = useState<boolean>(false);
+  const [screenerError, setScreenerError] = useState<string | null>(null);
+
+  // --- Quote Search States ---
+  const [searchTicker, setSearchTicker] = useState<string>('');
+  const [quoteData, setQuoteData] = useState<any>(null);
+  const [quoteLoading, setQuoteLoading] = useState<boolean>(false);
+
+  // --- AI Research States ---
+  const [aiTicker, setAiTicker] = useState<string>('');
+  const [aiData, setAiData] = useState<AIAnalysisData | null>(null);
+  const [aiLoading, setAiLoading] = useState<boolean>(false);
+
+  // 1. Core Screener Effect Engine
+  useEffect(() => {
+    const getScreenerData = async () => {
+      setScreenerLoading(true);
+      setScreenerError(null);
+      const res = await fetchDojiScan(timeframe);
+      if (res.ok) {
+        setScreenerStocks(res.results);
+      } else {
+        setScreenerError(res.error || "Failed to load scan matrices.");
+      }
+      setScreenerLoading(false);
+    };
+    getScreenerData();
+  }, [timeframe]);
+
+  // 2. Quote Lookup Handler
+  const handleQuoteSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchTicker) return;
+    setQuoteLoading(true);
+    const res = await fetchStockQuote(searchTicker);
+    if (res.ok && res.quotes.length > 0) {
+      setQuoteData(res.quotes[0]);
+    } else {
+      alert("Stock not found. Note: Use symbols like RELIANCE, TCS, or INFY.");
+      setQuoteData(null);
+    }
+    setQuoteLoading(false);
+  };
+
+  // 3. AI Analysis Request Handler
+  const handleAIAnalyze = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!aiTicker) return;
+    setAiLoading(true);
+    const res = await fetchAIAnalysis(aiTicker);
+    if (res.ok && res.analysisData) {
+      setAiData(res.analysisData);
+    } else {
+      alert("Unable to process technicals for this ticker.");
+      setAiData(null);
+    }
+    setAiLoading(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-[#0d1117] text-white font-sans selection:bg-blue-500/30">
+      <div className="w-full max-w-6xl mx-auto px-4 py-8 space-y-12">
+        
+        {/* Core App Header Branding */}
+        <div className="text-center border-b border-gray-800 pb-6">
+          <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
+            Stock Research Platform
+          </h1>
+          <p className="text-gray-400 mt-2 text-sm font-mono">Live NSE Market Analytics Engine</p>
+        </div>
+
+        {/* ================= SECTION 1: SEARCH STOCK ================= */}
+        <div className="bg-[#161b22] border border-gray-800 rounded-xl p-6 shadow-xl space-y-4">
+          <h2 className="text-xl font-bold tracking-wide text-center uppercase text-gray-300">Search Stock</h2>
+          <form onSubmit={handleQuoteSearch} className="flex justify-center gap-3 max-w-md mx-auto">
+            <input
+              type="text"
+              placeholder="Enter stock (e.g. RELIANCE, TCS)"
+              value={searchTicker}
+              onChange={(e) => setSearchTicker(e.target.value)}
+              className="w-full bg-[#0d1117] border border-gray-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500 font-mono"
+            />
+            <button
+              type="submit"
+              disabled={quoteLoading}
+              className="bg-blue-600 hover:bg-blue-500 transition-colors px-6 py-2 rounded-lg font-semibold text-sm disabled:opacity-50"
+            >
+              {quoteLoading ? "..." : "Search"}
+            </button>
+          </form>
+
+          {quoteData && (
+            <div className="max-w-md mx-auto p-4 bg-[#0d1117] border border-gray-800 rounded-lg flex justify-between items-center font-mono">
+              <div>
+                <span className="text-blue-400 font-bold text-lg">{quoteData.symbol}</span>
+                <span className="text-gray-500 text-xs block">Last Traded Price</span>
+              </div>
+              <div className="text-right">
+                <div className="text-lg font-bold">₹{quoteData.price.toLocaleString('en-IN')}</div>
+                <div className={`text-xs font-semibold ${quoteData.change >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {quoteData.change >= 0 ? `+${quoteData.change}%` : `${quoteData.change}%`}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ================= SECTION 2: DOJI SCREENER ================= */}
+        <div className="bg-[#161b22] border border-gray-800 rounded-xl p-6 shadow-xl space-y-6">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold tracking-wide uppercase text-gray-300">Doji Screener</h2>
+            <p className="text-xs text-gray-500 mt-1">Filters equities where open matches close inside a 10% range threshold.</p>
+          </div>
+
+          {/* Timeframe Toggles */}
+          <div className="flex justify-center gap-2">
+            {['1D', '1W', '1M', '3M'].map((tf) => (
+              <button
+                key={tf}
+                onClick={() => setTimeframe(tf)}
+                className={`px-5 py-2 text-xs font-bold rounded-md border tracking-wider transition-all ${
+                  timeframe === tf
+                    ? 'bg-white text-black border-white shadow-md transform scale-105'
+                    : 'bg-[#0d1117] text-gray-400 border-gray-700 hover:bg-gray-800 hover:text-white'
+                }`}
+              >
+                {tf}
+              </button>
+            ))}
+          </div>
+
+          {/* Screener Output Matrix Panel */}
+          <div className="bg-[#0d1117] rounded-lg border border-gray-800 overflow-hidden">
+            {screenerLoading ? (
+              <div className="text-center py-16 text-blue-400 font-mono text-xs animate-pulse">
+                Running real-time processing formulas on Cloud Metrics...
+              </div>
+            ) : screenerError ? (
+              <div className="text-center py-8 text-red-400 font-mono text-xs">{screenerError}</div>
+            ) : screenerStocks.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-[#161b22] text-gray-400 uppercase tracking-wider border-b border-gray-800 font-mono">
+                      <th className="py-3 px-4 w-12 text-center">Sr.</th>
+                      <th className="py-3 px-4">Symbol</th>
+                      <th className="py-3 px-4">Sector</th>
+                      <th className="py-3 px-4 text-right">Price (INR)</th>
+                      <th className="py-3 px-4 text-right">Chg %</th>
+                      <th className="py-3 px-4 text-right">Volume</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-800/60 font-mono">
+                    {screenerStocks.map((stock, idx) => (
+                      <tr key={stock.symbol} className="hover:bg-[#1f242c] transition-colors">
+                        <td className="py-3.5 px-4 text-center text-gray-600">{idx + 1}</td>
+                        <td className="py-3.5 px-4 text-blue-400 font-bold">{stock.symbol}</td>
+                        <td className="py-3.5 px-4 text-gray-400">{stock.sector}</td>
+                        <td className="py-3.5 px-4 text-right font-medium">₹{stock.price.toFixed(2)}</td>
+                        <td className={`py-3.5 px-4 text-right font-bold ${stock.change >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                          {stock.change >= 0 ? `+${stock.change}%` : `${stock.change}%`}
+                        </td>
+                        <td className="py-3.5 px-4 text-right text-gray-400">{(stock.volume / 100000).toFixed(1)} L</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="text-center py-12 text-gray-500 font-mono text-xs">
+                No active symbols currently printing patterns within this parameter.
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ================= SECTION 3: AI RESEARCH ================= */}
+        <div className="bg-[#161b22] border border-gray-800 rounded-xl p-6 shadow-xl space-y-6">
+          <h2 className="text-xl font-bold tracking-wide text-center uppercase text-gray-300">AI Research</h2>
+          <form onSubmit={handleAIAnalyze} className="flex justify-center gap-3 max-w-md mx-auto">
+            <input
+              type="text"
+              placeholder="Enter stock symbol (e.g. INF_Y, SBIN)"
+              value={aiTicker}
+              onChange={(e) => setAiTicker(e.target.value)}
+              className="w-full bg-[#0d1117] border border-gray-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500 font-mono"
+            />
+            <button
+              type="submit"
+              disabled={aiLoading}
+              className="bg-emerald-600 hover:bg-emerald-500 transition-colors px-6 py-2 rounded-lg font-semibold text-sm disabled:opacity-50"
+            >
+              {aiLoading ? "Analyzing..." : "Analyze"}
+            </button>
+          </form>
+
+          {aiData && aiData.analysis && (
+            <div className="border border-gray-800 bg-[#0d1117] p-6 rounded-xl space-y-4 text-sm font-sans">
+              <div className="flex flex-col sm:flex-row justify-between border-b border-gray-800 pb-3 items-start sm:items-center gap-2">
+                <div>
+                  <h3 className="text-xl font-extrabold text-white">{aiData.name} ({aiData.ticker})</h3>
+                  <p className="text-gray-400 text-xs mt-0.5">Sector Focus: {aiData.analysis.fundamentals.sector}</p>
+                </div>
+                <span className="px-3 py-1 bg-blue-950/80 border border-blue-800 text-blue-400 text-xs font-mono font-bold rounded-full">
+                  {aiData.signal}
+                </span>
+              </div>
+
+              <div>
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Business Summary</h4>
+                <p className="text-gray-300 text-xs leading-relaxed">{aiData.analysis.business}</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
+                <div className="p-4 bg-[#161b22] border border-gray-800 rounded-lg space-y-2">
+                  <h5 className="text-blue-400 font-bold border-b border-gray-800 pb-1">TECHNICAL ANALYSIS</h5>
+                  <div className="flex justify-between"><span>Relative Strength (RSI):</span> <span className="text-white font-bold">{aiData.analysis.technicals.rsi}</span></div>
+                  <div className="flex justify-between"><span>Momentum Vector:</span> <span className="text-white font-bold">{aiData.analysis.technicals.momentum}</span></div>
+                </div>
+
+                <div className="p-4 bg-[#161b22] border border-gray-800 rounded-lg space-y-2">
+                  <h5 className="text-emerald-400 font-bold border-b border-gray-800 pb-1">FUNDAMENTAL MATRIX</h5>
+                  <div className="flex justify-between"><span>P/E Ratio:</span> <span className="text-white font-bold">{aiData.analysis.fundamentals.pe_ratio || "N/A"}</span></div>
+                  <div className="flex justify-between"><span>Return on Equity:</span> <span className="text-white font-bold">{aiData.analysis.fundamentals.roe}</span></div>
+                  <div className="flex justify-between"><span>Dividend Yield:</span> <span className="text-white font-bold">{aiData.analysis.fundamentals.dividend}</span></div>
+                </div>
+              </div>
+
+              <div className="space-y-1.5 pt-2">
+                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Risk Matrix Factors</h4>
+                <ul className="list-disc pl-5 text-xs text-gray-400 space-y-1">
+                  {aiData.analysis.risks.map((risk, index) => (
+                    <li key={index}>{risk}</li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
+        </div>
+
+      </div>
+    </div>
+  );
+}
