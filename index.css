@@ -1,272 +1,284 @@
-  import React, { useState, useEffect } from 'react';
-import { fetchDojiScan, fetchStockQuote, fetchAIAnalysis } from '../src/api';
-
-// Interface definitions for strict type safety
-interface StockResult {
-  symbol: string;
-  sector: string;
-  price: number;
-  change: number;
-  volume: number;
+  :root {
+  --chartink-blue: #2c3e50;
+  --chartink-green: #24b47e;
+  --chartink-green-hover: #1e9668;
+  --text-main: #334155;
+  --border-color: #e2e8f0;
 }
 
-interface AIAnalysisData {
-  ticker: string;
-  name: string;
-  signal: string;
-  analysis: {
-    business: string;
-    technicals: { rsi: number; momentum: string };
-    fundamentals: { sector: string; pe_ratio: number; roe: string; dividend: string };
-    risks: string[];
-  };
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  color: var(--text-main);
+  background-color: #f8fafc;
+  -webkit-font-smoothing: antialiased;
 }
 
-export default function StockResearchPlatform() {
-  // --- Doji Screener States ---
-  const [timeframe, setTimeframe] = useState<string>('1D');
-  const [screenerStocks, setScreenerStocks] = useState<StockResult[]>([]);
-  const [screenerLoading, setScreenerLoading] = useState<boolean>(false);
-  const [screenerError, setScreenerError] = useState<string | null>(null);
+/* Header & Navbar Custom Layout */
+.ci-header {
+  background-color: var(--chartink-blue);
+  padding: 0 24px;
+  height: 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
 
-  // --- Quote Search States ---
-  const [searchTicker, setSearchTicker] = useState<string>('');
-  const [quoteData, setQuoteData] = useState<any>(null);
-  const [quoteLoading, setQuoteLoading] = useState<boolean>(false);
+.ci-logo {
+  font-size: 20px;
+  font-weight: 700;
+  color: #fff;
+  text-decoration: none;
+  letter-spacing: 0.5px;
+}
+.ci-logo span {
+  color: var(--chartink-green);
+}
 
-  // --- AI Research States ---
-  const [aiTicker, setAiTicker] = useState<string>('');
-  const [aiData, setAiData] = useState<AIAnalysisData | null>(null);
-  const [aiLoading, setAiLoading] = useState<boolean>(false);
+.ci-nav {
+  display: flex;
+  gap: 20px;
+  margin-left: 40px;
+}
 
-  // 1. Core Screener Effect Engine
-  useEffect(() => {
-    const getScreenerData = async () => {
-      setScreenerLoading(true);
-      setScreenerError(null);
-      const res = await fetchDojiScan(timeframe);
-      if (res.ok) {
-        setScreenerStocks(res.results);
-      } else {
-        setScreenerError(res.error || "Failed to load scan matrices.");
-      }
-      setScreenerLoading(false);
-    };
-    getScreenerData();
-  }, [timeframe]);
+.ci-nav-link {
+  color: #cbd5e1;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 20px 0;
+  border-bottom: 3px solid transparent;
+  transition: all 0.2s;
+}
 
-  // 2. Quote Lookup Handler
-  const handleQuoteSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchTicker) return;
-    setQuoteLoading(true);
-    const res = await fetchStockQuote(searchTicker);
-    if (res.ok && res.quotes.length > 0) {
-      setQuoteData(res.quotes[0]);
-    } else {
-      alert("Stock not found. Note: Use symbols like RELIANCE, TCS, or INFY.");
-      setQuoteData(null);
-    }
-    setQuoteLoading(false);
-  };
+.ci-nav-link:hover, .ci-nav-link.active {
+  color: #fff;
+  border-bottom-color: var(--chartink-green);
+}
 
-  // 3. AI Analysis Request Handler
-  const handleAIAnalyze = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!aiTicker) return;
-    setAiLoading(true);
-    const res = await fetchAIAnalysis(aiTicker);
-    if (res.ok && res.analysisData) {
-      setAiData(res.analysisData);
-    } else {
-      alert("Unable to process technicals for this ticker.");
-      setAiData(null);
-    }
-    setAiLoading(false);
-  };
+.btn-scan {
+  background-color: var(--chartink-green);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.btn-scan:hover {
+  background-color: var(--chartink-green-hover);
+}
 
-  return (
-    <div className="min-h-screen bg-[#0d1117] text-white font-sans selection:bg-blue-500/30">
-      <div className="w-full max-w-6xl mx-auto px-4 py-8 space-y-12">
-        
-        {/* Core App Header Branding */}
-        <div className="text-center border-b border-gray-800 pb-6">
-          <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">
-            Stock Research Platform
-          </h1>
-          <p className="text-gray-400 mt-2 text-sm font-mono">Live NSE Market Analytics Engine</p>
-        </div>
+/* Panel Structure */
+.ci-container {
+  max-width: 1240px;
+  margin: 24px auto;
+  padding: 0 20px;
+}
 
-        {/* ================= SECTION 1: SEARCH STOCK ================= */}
-        <div className="bg-[#161b22] border border-gray-800 rounded-xl p-6 shadow-xl space-y-4">
-          <h2 className="text-xl font-bold tracking-wide text-center uppercase text-gray-300">Search Stock</h2>
-          <form onSubmit={handleQuoteSearch} className="flex justify-center gap-3 max-w-md mx-auto">
-            <input
-              type="text"
-              placeholder="Enter stock (e.g. RELIANCE, TCS)"
-              value={searchTicker}
-              onChange={(e) => setSearchTicker(e.target.value)}
-              className="w-full bg-[#0d1117] border border-gray-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500 font-mono"
-            />
-            <button
-              type="submit"
-              disabled={quoteLoading}
-              className="bg-blue-600 hover:bg-blue-500 transition-colors px-6 py-2 rounded-lg font-semibold text-sm disabled:opacity-50"
-            >
-              {quoteLoading ? "..." : "Search"}
-            </button>
-          </form>
+.ci-panel {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+}
 
-          {quoteData && (
-            <div className="max-w-md mx-auto p-4 bg-[#0d1117] border border-gray-800 rounded-lg flex justify-between items-center font-mono">
-              <div>
-                <span className="text-blue-400 font-bold text-lg">{quoteData.symbol}</span>
-                <span className="text-gray-500 text-xs block">Last Traded Price</span>
-              </div>
-              <div className="text-right">
-                <div className="text-lg font-bold">₹{quoteData.price.toLocaleString('en-IN')}</div>
-                <div className={`text-xs font-semibold ${quoteData.change >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                  {quoteData.change >= 0 ? `+${quoteData.change}%` : `${quoteData.change}%`}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+.meta-title h1 {
+  font-size: 22px;
+  color: #1e293b;
+  margin: 0 0 6px 0;
+  font-weight: 600;
+}
+.meta-title p {
+  font-size: 13px;
+  color: #64748b;
+  margin: 0;
+}
 
-        {/* ================= SECTION 2: DOJI SCREENER ================= */}
-        <div className="bg-[#161b22] border border-gray-800 rounded-xl p-6 shadow-xl space-y-6">
-          <div className="text-center">
-            <h2 className="text-2xl font-bold tracking-wide uppercase text-gray-300">Doji Screener</h2>
-            <p className="text-xs text-gray-500 mt-1">Filters equities where open matches close inside a 10% range threshold.</p>
-          </div>
+/* Filter Blocks */
+.engine-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+}
 
-          {/* Timeframe Toggles */}
-          <div className="flex justify-center gap-2">
-            {['1D', '1W', '1M', '3M'].map((tf) => (
-              <button
-                key={tf}
-                onClick={() => setTimeframe(tf)}
-                className={`px-5 py-2 text-xs font-bold rounded-md border tracking-wider transition-all ${
-                  timeframe === tf
-                    ? 'bg-white text-black border-white shadow-md transform scale-105'
-                    : 'bg-[#0d1117] text-gray-400 border-gray-700 hover:bg-gray-800 hover:text-white'
-                }`}
-              >
-                {tf}
-              </button>
-            ))}
-          </div>
+.engine-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+}
 
-          {/* Screener Output Matrix Panel */}
-          <div className="bg-[#0d1117] rounded-lg border border-gray-800 overflow-hidden">
-            {screenerLoading ? (
-              <div className="text-center py-16 text-blue-400 font-mono text-xs animate-pulse">
-                Running real-time processing formulas on Cloud Metrics...
-              </div>
-            ) : screenerError ? (
-              <div className="text-center py-8 text-red-400 font-mono text-xs">{screenerError}</div>
-            ) : screenerStocks.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs border-collapse">
-                  <thead>
-                    <tr className="bg-[#161b22] text-gray-400 uppercase tracking-wider border-b border-gray-800 font-mono">
-                      <th className="py-3 px-4 w-12 text-center">Sr.</th>
-                      <th className="py-3 px-4">Symbol</th>
-                      <th className="py-3 px-4">Sector</th>
-                      <th className="py-3 px-4 text-right">Price (INR)</th>
-                      <th className="py-3 px-4 text-right">Chg %</th>
-                      <th className="py-3 px-4 text-right">Volume</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-800/60 font-mono">
-                    {screenerStocks.map((stock, idx) => (
-                      <tr key={stock.symbol} className="hover:bg-[#1f242c] transition-colors">
-                        <td className="py-3.5 px-4 text-center text-gray-600">{idx + 1}</td>
-                        <td className="py-3.5 px-4 text-blue-400 font-bold">{stock.symbol}</td>
-                        <td className="py-3.5 px-4 text-gray-400">{stock.sector}</td>
-                        <td className="py-3.5 px-4 text-right font-medium">₹{stock.price.toFixed(2)}</td>
-                        <td className={`py-3.5 px-4 text-right font-bold ${stock.change >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                          {stock.change >= 0 ? `+${stock.change}%` : `${stock.change}%`}
-                        </td>
-                        <td className="py-3.5 px-4 text-right text-gray-400">{(stock.volume / 100000).toFixed(1)} L</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="text-center py-12 text-gray-500 font-mono text-xs">
-                No active symbols currently printing patterns within this parameter.
-              </div>
-            )}
-          </div>
-        </div>
+.tf-group {
+  display: flex;
+  background: #f1f5f9;
+  padding: 3px;
+  border-radius: 6px;
+}
 
-        {/* ================= SECTION 3: AI RESEARCH ================= */}
-        <div className="bg-[#161b22] border border-gray-800 rounded-xl p-6 shadow-xl space-y-6">
-          <h2 className="text-xl font-bold tracking-wide text-center uppercase text-gray-300">AI Research</h2>
-          <form onSubmit={handleAIAnalyze} className="flex justify-center gap-3 max-w-md mx-auto">
-            <input
-              type="text"
-              placeholder="Enter stock symbol (e.g. INF_Y, SBIN)"
-              value={aiTicker}
-              onChange={(e) => setAiTicker(e.target.value)}
-              className="w-full bg-[#0d1117] border border-gray-700 rounded-lg px-4 py-2 text-sm text-white focus:outline-none focus:border-blue-500 font-mono"
-            />
-            <button
-              type="submit"
-              disabled={aiLoading}
-              className="bg-emerald-600 hover:bg-emerald-500 transition-colors px-6 py-2 rounded-lg font-semibold text-sm disabled:opacity-50"
-            >
-              {aiLoading ? "Analyzing..." : "Analyze"}
-            </button>
-          </form>
+.tf-btn {
+  background: transparent;
+  border: none;
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.tf-btn.active {
+  background: white;
+  color: #0f172a;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
 
-          {aiData && aiData.analysis && (
-            <div className="border border-gray-800 bg-[#0d1117] p-6 rounded-xl space-y-4 text-sm font-sans">
-              <div className="flex flex-col sm:flex-row justify-between border-b border-gray-800 pb-3 items-start sm:items-center gap-2">
-                <div>
-                  <h3 className="text-xl font-extrabold text-white">{aiData.name} ({aiData.ticker})</h3>
-                  <p className="text-gray-400 text-xs mt-0.5">Sector Focus: {aiData.analysis.fundamentals.sector}</p>
-                </div>
-                <span className="px-3 py-1 bg-blue-950/80 border border-blue-800 text-blue-400 text-xs font-mono font-bold rounded-full">
-                  {aiData.signal}
-                </span>
-              </div>
+.rule-pill {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+  padding: 10px 14px;
+  border-radius: 4px;
+  font-family: 'Roboto Mono', monospace;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
 
-              <div>
-                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">Business Summary</h4>
-                <p className="text-gray-300 text-xs leading-relaxed">{aiData.analysis.business}</p>
-              </div>
+.badge-pass {
+  background: #d1fae5;
+  color: #065f46;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-mono text-xs">
-                <div className="p-4 bg-[#161b22] border border-gray-800 rounded-lg space-y-2">
-                  <h5 className="text-blue-400 font-bold border-b border-gray-800 pb-1">TECHNICAL ANALYSIS</h5>
-                  <div className="flex justify-between"><span>Relative Strength (RSI):</span> <span className="text-white font-bold">{aiData.analysis.technicals.rsi}</span></div>
-                  <div className="flex justify-between"><span>Momentum Vector:</span> <span className="text-white font-bold">{aiData.analysis.technicals.momentum}</span></div>
-                </div>
+/* Premium Navigation Tabs */
+.ci-tabs {
+  display: flex;
+  gap: 24px;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 16px;
+}
 
-                <div className="p-4 bg-[#161b22] border border-gray-800 rounded-lg space-y-2">
-                  <h5 className="text-emerald-400 font-bold border-b border-gray-800 pb-1">FUNDAMENTAL MATRIX</h5>
-                  <div className="flex justify-between"><span>P/E Ratio:</span> <span className="text-white font-bold">{aiData.analysis.fundamentals.pe_ratio || "N/A"}</span></div>
-                  <div className="flex justify-between"><span>Return on Equity:</span> <span className="text-white font-bold">{aiData.analysis.fundamentals.roe}</span></div>
-                  <div className="flex justify-between"><span>Dividend Yield:</span> <span className="text-white font-bold">{aiData.analysis.fundamentals.dividend}</span></div>
-                </div>
-              </div>
+.ci-tab-btn {
+  background: none;
+  border: none;
+  padding-bottom: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+}
+.ci-tab-btn.active {
+  color: var(--chartink-green);
+  border-bottom-color: var(--chartink-green);
+}
 
-              <div className="space-y-1.5 pt-2">
-                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider">Risk Matrix Factors</h4>
-                <ul className="list-disc pl-5 text-xs text-gray-400 space-y-1">
-                  {aiData.analysis.risks.map((risk, index) => (
-                    <li key={index}>{risk}</li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          )}
-        </div>
+/* Premium Stock Data Table Styling */
+.table-wrapper {
+  overflow-x: auto;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
 
-      </div>
-    </div>
-  );
+.ci-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13.5px;
+}
+
+.ci-table th {
+  background-color: #f1f5f9;
+  color: #475569;
+  font-weight: 600;
+  padding: 12px 14px;
+  border-bottom: 2px solid var(--border-color);
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+}
+
+.ci-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #334155;
+}
+
+.ci-table tr:hover {
+  background-color: #f8fafc;
+}
+
+.stock-link {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+}
+.stock-link:hover {
+  text-decoration: underline;
+}
+
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+.font-mono { font-family: 'Roboto Mono', monospace; }
+.text-green { color: #16a34a; font-weight: 600; }
+.text-red { color: #dc2626; font-weight: 600; }
+
+.search-container {
+  padding: 0 0 14px 0;
+}
+.search-bar {
+  width: 100%;
+  max-width: 320px;
+  padding: 7px 12px;
+  font-size: 13px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  outline: none;
+}
+.search-bar:focus {
+  border-color: var(--chartink-green);
+}
+
+/* Chart System Layout */
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 20px;
+}
+.chart-card {
+  background: white;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 14px;
+}
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13.5px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+  padding-bottom: 6px;
+}
+.chart-body {
+  height: 220px;
+  background: #0b0e14;
+  border-radius: 4px;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
