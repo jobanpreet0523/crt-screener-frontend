@@ -1,263 +1,174 @@
-import React, { useState, useEffect } from 'react';
-import { fetchDojiScan } from './api';
+import React, { useState } from 'react';
 
 export default function DojiScreener() {
   const [timeframe, setTimeframe] = useState('1D');
-  const [screenerStocks, setScreenerStocks] = useState([]);
-  const [screenerLoading, setScreenerLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState('table'); 
-  
-  // ADVANCED FEATURE: Track table sorting state
-  const [sortConfig, setSortConfig] = useState({ key: 'volume', direction: 'descending' });
+  const [activeTab, setActiveTab] = useState('results');
+  const [search, setSearch] = useState('');
+  const [sort, setSort] = useState({ key: 'symbol', order: 'asc' });
 
-  useEffect(() => {
-    loadScreenerData(timeframe);
-  }, [timeframe]);
+  const stockDatabase = [
+    { name: "HDFC Bank Ltd.", symbol: "HDFCBANK", price: 1511.00, volume: 4800000, per_chg: "+0.07%", rawChg: 0.07, bse: "500180", doji: { '1D': true, '1W': true, '1M': true } },
+    { name: "ICICI Bank Ltd.", symbol: "ICICIBANK", price: 1120.40, volume: 3900000, per_chg: "+0.64%", rawChg: 0.64, bse: "532174", doji: { '1D': true, '1W': false, '1M': true } },
+    { name: "Reliance Industries Ltd.", symbol: "RELIANCE", price: 2450.50, volume: 3400000, per_chg: "+0.02%", rawChg: 0.02, bse: "500325", doji: { '1D': true, '1W': true, '1M': false } },
+    { name: "State Bank of India", symbol: "SBIN", price: 780.20, volume: 6100000, per_chg: "-0.15%", rawChg: -0.15, bse: "500112", doji: { '1D': true, '1W': true, '1M': false } },
+    { name: "Tata Consultancy Services", symbol: "TCS", price: 3851.00, volume: 1200000, per_chg: "+0.05%", rawChg: 0.05, bse: "532540", doji: { '1D': true, '1W': false, '1M': false } },
+    { name: "Wipro Ltd.", symbol: "WIPRO", price: 432.00, volume: 950000, per_chg: "-0.85%", rawChg: -0.85, bse: "576851", doji: { '1D': false, '1W': true, '1M': false } },
+    { name: "Infosys Ltd.", symbol: "INFY", price: 1455.00, volume: 2100000, per_chg: "-1.24%", rawChg: -1.24, bse: "500209", doji: { '1D': false, '1W': false, '1M': false } }
+  ];
 
-  const loadScreenerData = async (selectedTimeframe) => {
-    setScreenerLoading(true);
-    try {
-      const response = await fetchDojiScan(selectedTimeframe);
-      if (response.ok) {
-        setScreenerStocks(response.results || []);
+  const handleSort = (key) => {
+    setSort({
+      key,
+      order: sort.key === key && sort.order === 'asc' ? 'desc' : 'asc'
+    });
+  };
+
+  const processData = () => {
+    let output = stockDatabase.filter(item => item.doji[timeframe]);
+
+    if (search.trim()) {
+      const q = search.toLowerCase();
+      output = output.filter(item => 
+        item.name.toLowerCase().includes(q) || item.symbol.toLowerCase().includes(q)
+      );
+    }
+
+    output.sort((a, b) => {
+      let fieldA = a[sort.key];
+      let fieldB = b[sort.key];
+      if (typeof fieldA === 'string') {
+        return sort.order === 'asc' ? fieldA.localeCompare(fieldB) : fieldB.localeCompare(fieldA);
       }
-    } catch (err) {
-      console.error("Data fetch exception:", err);
-    } finally {
-      setScreenerLoading(false);
-    }
+      return sort.order === 'asc' ? fieldA - fieldB : fieldB - a[sort.key];
+    });
+
+    return output;
   };
 
-  // ADVANCED FEATURE: Dynamic Column Sorting
-  const requestSort = (key) => {
-    let direction = 'ascending';
-    if (sortConfig.key === key && sortConfig.direction === 'ascending') {
-      direction = 'descending';
-    }
-    setSortConfig({ key, direction });
-  };
-
-  const filteredStocks = React.useMemo(() => {
-    let stocks = screenerStocks.filter(stock => 
-      stock.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      stock.symbol.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-    if (sortConfig.key !== null) {
-      stocks.sort((a, b) => {
-        let aValue = a[sortConfig.key];
-        let bValue = b[sortConfig.key];
-
-        if (sortConfig.key === 'price' || sortConfig.key === 'change' || sortConfig.key === 'volume') {
-          aValue = parseFloat(aValue);
-          bValue = parseFloat(bValue);
-        }
-
-        if (aValue < bValue) return sortConfig.direction === 'ascending' ? -1 : 1;
-        if (aValue > bValue) return sortConfig.direction === 'ascending' ? 1 : -1;
-        return 0;
-      });
-    }
-    return stocks;
-  }, [screenerStocks, searchQuery, sortConfig]);
-
-  // ADVANCED FEATURE: Data sheet exporter tool
-  const exportToCSV = () => {
-    const headers = ['Sr,Stock Name,Symbol,Price(INR),Change%,Volume\n'];
-    const rows = filteredStocks.map((s, idx) => 
-      `${idx + 1},${s.name},${s.symbol},${s.price},${s.change}%,${s.volume}`
-    );
-    const blob = new Blob([headers.concat(rows.join('\n'))], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.setAttribute('href', url);
-    a.setAttribute('download', `Doji_Screener_${timeframe}.csv`);
-    a.click();
-  };
+  const computedStocks = processData();
 
   return (
-    <div className="min-h-screen bg-[#f8f9fa] text-gray-800 p-6 font-sans">
-      
-      {/* Chartink Styled Top Header Panel */}
-      <div className="max-w-7xl mx-auto bg-white border border-gray-200 rounded-lg p-6 mb-6 shadow-sm">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-xl font-bold text-[#1a2b4c] mb-1">Doji - 2 Candlestick Screener</h1>
-            <p className="text-xs text-gray-500">
-              Filters stocks forming precise equilibrium neutral doji patterns across selected timeframes.
-            </p>
-          </div>
-          <button 
-            onClick={exportToCSV}
-            className="bg-[#24a0ed] hover:bg-blue-600 text-white text-xs px-4 py-2 rounded font-semibold shadow-sm transition-all"
-          >
-            📥 Download CSV Dataset
-          </button>
+    <div>
+      <header className="ci-header">
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <a href="#" className="ci-logo">CHARTINK<span>.com</span></a>
+          <nav className="ci-nav">
+            <a href="#" className="ci-nav-link">Dashboard</a>
+            <a href="#" className="ci-nav-link active">Charts</a>
+            <a href="#" className="ci-nav-link">Screeners</a>
+            <a href="#" className="ci-nav-link">Premium</a>
+          </nav>
         </div>
-      </div>
+        <button className="btn-scan">Create Scan</button>
+      </header>
 
-      {/* Filter Engine Logic Cards */}
-      <div className="max-w-7xl mx-auto bg-white border border-gray-200 rounded-lg p-5 mb-6 shadow-sm">
-        <div className="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
-          <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">FILTER LOGIC ENGINE</span>
-          
-          <div className="flex space-x-1 bg-gray-100 p-1 rounded border border-gray-200及">
-            {['1D', '1W', '1M'].map((tf) => (
-              <button
-                key={tf}
-                onClick={() => setTimeframe(tf)}
-                className={`px-4 py-1 text-xs font-semibold rounded transition-all ${
-                  timeframe === tf ? 'bg-white text-gray-900 shadow-sm font-bold' : 'text-gray-500 hover:text-gray-900'
-                }`}
-              >
-                {tf === '1D' ? 'Daily' : tf === '1W' ? 'Weekly' : 'Monthly'}
-              </button>
-            ))}
-          </div>
+      <div className="ci-container">
+        <div className="ci-panel meta-title">
+          <h1>Doji - 2 Candlestick Screener</h1>
+          <p style={{marginTop: '6px'}}>Filters stocks forming equilibrium neutral doji patterns across selected execution windows.</p>
         </div>
-        <div className="space-y-2">
-          <div className="bg-white p-2 px-3 rounded border border-gray-100 flex items-center gap-3 text-xs text-gray-600 shadow-sm">
-            <span className="bg-emerald-50 text-emerald-600 font-bold px-1.5 py-0.5 rounded border border-emerald-200 text-[10px]">PASS</span>
+
+        <div className="ci-panel">
+          <div className="engine-bar">
+            <div className="engine-title">Filter Logic Engine</div>
+            <div className="tf-group">
+              {['1D', '1W', '1M'].map(tf => (
+                <button 
+                  key={tf}
+                  className={`tf-btn ${timeframe === tf ? 'active' : ''}`}
+                  onClick={() => setTimeframe(tf)}
+                >
+                  {tf === '1D' ? 'Daily' : tf === '1W' ? 'Weekly' : 'Monthly'}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="rule-pill">
+            <span className="badge-pass">Pass</span>
             <span>Latest Close matches Latest Open within 0.1% of Close (Doji Body Rule)</span>
           </div>
-          <div className="bg-white p-2 px-3 rounded border border-gray-100 flex items-center gap-3 text-xs text-gray-600 shadow-sm">
-            <span className="bg-emerald-50 text-emerald-600 font-bold px-1.5 py-0.5 rounded border border-emerald-200 text-[10px]">PASS</span>
+          <div className="rule-pill">
+            <span className="badge-pass">Pass</span>
             <span>Latest Volume greater than 100,000 (Liquidity Rule)</span>
           </div>
         </div>
-      </div>
 
-      {/* Main Table & Tab Module Container */}
-      <div className="max-w-7xl mx-auto bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-        
-        <div className="p-4 bg-white border-b border-gray-200 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div className="flex space-x-6">
-            <button
-              onClick={() => setActiveTab('table')}
-              className={`pb-2 text-sm font-bold transition-all relative ${
-                activeTab === 'table' ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-gray-400 hover:text-gray-600'
-              }`}
-            >
-              Filtered Stocks ({filteredStocks.length})
-            </button>
-            <button
-              onClick={() => setActiveTab('gallery')}
-              className={`pb-2 text-sm font-bold transition-all relative ${
-                activeTab === 'gallery' ? 'text-emerald-600 border-b-2 border-emerald-600' : 'text-gray-400 hover:text-gray-600'
-              }`}
-            >
-              Interactive Multi-Chart Gallery
-            </button>
-          </div>
-
-          <input
-            type="text"
-            placeholder="Quick search symbol or name..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-white text-gray-800 text-xs rounded border border-gray-300 px-3 py-1.5 w-full sm:w-64 focus:outline-none focus:border-emerald-500 font-medium shadow-sm"
-          />
+        <div className="ci-tabs">
+          <button className={`ci-tab-btn ${activeTab === 'results' ? 'active' : ''}`} onClick={() => setActiveTab('results')}>
+            Filtered Stocks ({computedStocks.length})
+          </button>
+          <button className={`ci-tab-btn ${activeTab === 'charts' ? 'active' : ''}`} onClick={() => setActiveTab('charts')}>
+            Multi-Chart Gallery
+          </button>
         </div>
 
-        {activeTab === 'table' ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-[#f8f9fa] text-gray-500 text-[11px] font-bold uppercase border-b border-gray-200 select-none">
-                  <th className="p-3 w-16 text-center border-r border-gray-100">Sr.</th>
-                  <th className="p-3 cursor-pointer hover:bg-gray-100 border-r border-gray-100" onClick={() => requestSort('name')}>
-                    Stock Name {sortConfig.key === 'name' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : '↕'}
-                  </th>
-                  <th className="p-3 border-r border-gray-100">Symbol</th>
-                  <th className="p-3 border-r border-gray-100">Links</th>
-                  <th className="p-3 cursor-pointer hover:bg-gray-100 border-r border-gray-100" onClick={() => requestSort('price')}>
-                    Price (INR) {sortConfig.key === 'price' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : '↕'}
-                  </th>
-                  <th className="p-3 cursor-pointer hover:bg-gray-100 border-r border-gray-100" onClick={() => requestSort('change')}>
-                    Chg % {sortConfig.key === 'change' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : '↕'}
-                  </th>
-                  <th className="p-3 text-right pr-6 cursor-pointer hover:bg-gray-100" onClick={() => requestSort('volume')}>
-                    Volume {sortConfig.key === 'volume' ? (sortConfig.direction === 'ascending' ? '▲' : '▼') : '↕'}
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 text-xs text-gray-700">
-                {screenerLoading ? (
+        {activeTab === 'results' ? (
+          <div className="ci-panel" style={{padding: '0 0 12px 0'}}>
+            <div style={{padding: '14px 16px', background: '#fafbfc', borderBottom: '1px solid #e2e8f0'}}>
+              <input 
+                type="text" 
+                className="search-bar" 
+                placeholder="Search symbol or company name..." 
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+            <div className="table-wrapper">
+              <table className="ci-table">
+                <thead>
                   <tr>
-                    <td colSpan="7" className="p-12 text-center text-gray-400">
-                      <div className="inline-block animate-spin rounded-full h-5 w-5 border-t-2 border-emerald-500 mr-3 align-middle" />
-                      Scanning technical matrices...
-                    </td>
+                    <th className="text-center" style={{width: '60px'}}>Sr.</th>
+                    <th style={{cursor: 'pointer'}} onClick={() => handleSort('name')}>Stock Name</th>
+                    <th style={{cursor: 'pointer'}} onClick={() => handleSort('symbol')}>Symbol</th>
+                    <th>Links</th>
+                    <th className="text-right" style={{cursor: 'pointer'}} onClick={() => handleSort('price')}>Price (INR)</th>
+                    <th className="text-right" style={{cursor: 'pointer'}} onClick={() => handleSort('rawChg')}>Chg %</th>
+                    <th className="text-right" style={{cursor: 'pointer'}} onClick={() => handleSort('volume')}>Volume</th>
                   </tr>
-                ) : filteredStocks.length === 0 ? (
-                  <tr>
-                    <td colSpan="7" className="p-12 text-center text-gray-400">
-                      No stocks found matching the criteria.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredStocks.map((stock, index) => (
-                    <tr key={stock.symbol} className="hover:bg-gray-50 transition-all">
-                      <td className="p-3 text-center text-gray-400 border-r border-gray-100">{index + 1}</td>
-                      <td className="p-3 font-semibold text-gray-900 border-r border-gray-100">{stock.name}</td>
-                      <td className="p-3 border-r border-gray-100">
-                        <a 
-                          href={`https://www.tradingview.com/symbols/NSE-${stock.symbol}/`}
-                          target="_blank" rel="noreferrer" className="text-blue-600 font-bold hover:underline"
-                        >
-                          {stock.symbol}
-                        </a>
-                      </td>
-                      <td className="p-3 text-gray-400 text-[11px] border-r border-gray-100">
-                        <span>BSE •</span>{' '}
-                        <a 
-                          href={`https://www.tradingview.com/symbols/NSE-${stock.symbol}/`}
-                          target="_blank" rel="noreferrer" className="text-blue-600 hover:underline"
-                        >
-                          Chart
-                        </a>
-                      </td>
-                      <td className="p-3 font-mono border-r border-gray-100">₹{parseFloat(stock.price).toFixed(2)}</td>
-                      <td className={`p-3 font-bold font-mono border-r border-gray-100 ${stock.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {stock.change >= 0 ? `+${stock.change.toFixed(2)}%` : `${stock.change.toFixed(2)}%`}
-                      </td>
-                      <td className="p-3 text-right pr-6 font-mono text-gray-600">
-                        {stock.volume.toLocaleString('en-IN')}
-                      </td>
+                </thead>
+                <tbody>
+                  {computedStocks.length === 0 ? (
+                    <tr>
+                      <td colSpan="7" className="text-center" style={{padding: '24px', color: '#64748b'}}>No equities match the criteria rules.</td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+                  ) : (
+                    computedStocks.map((stock, i) => (
+                      <tr key={stock.symbol}>
+                        <td className="text-center font-mono" style={{color: '#94a3b8'}}>{i + 1}</td>
+                        <td style={{fontWeight: '600', color: '#1e293b'}}>{stock.name}</td>
+                        <td><a href="#" className="stock-link">{stock.symbol}</a></td>
+                        <td>
+                          <span style={{fontSize: '11px', color: '#94a3b8', fontFamily: 'monospace'}}>
+                            <a href={`https://bseindia.com/stock-share-price/x/${stock.bse}`} target="_blank" rel="noreferrer" style={{color: '#64748b', textDecoration: 'none'}}>BSE</a> • Chart
+                          </span>
+                        </td>
+                        <td className="text-right font-mono" style={{fontWeight: 500}}>₹{stock.price.toFixed(2)}</td>
+                        <td className={`text-right font-mono ${stock.rawChg >= 0 ? 'text-green' : 'text-red'}`}>{stock.per_chg}</td>
+                        <td className="text-right font-mono" style={{color: '#64748b'}}>{stock.volume.toLocaleString()}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         ) : (
-          /* ADVANCED COMPONENT: INTERACTIVE LIVE TRADINGVIEW EMBEDS */
-          <div className="p-6 bg-gray-50 border-t border-gray-100">
-            {filteredStocks.length === 0 ? (
-              <div className="p-12 text-center text-gray-400">No active assets available.</div>
-            ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {filteredStocks.map((stock) => (
-                  <div key={stock.symbol} className="bg-white border border-gray-200 rounded-lg overflow-hidden shadow-sm">
-                    <div className="bg-white px-4 py-3 border-b border-gray-200 flex justify-between items-center">
-                      <span className="font-bold text-xs text-gray-800">{stock.name} ({stock.symbol})</span>
-                      <span className={`text-xs font-mono font-bold ${stock.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        ₹{stock.price} ({stock.change >= 0 ? `+${stock.change}%` : `${stock.change}%`})
-                      </span>
-                    </div>
-                    <div className="w-full h-80 bg-white">
-                      <iframe
-                        title={`tv-widget-${stock.symbol}`}
-                        src={`https://s.tradingview.com/widgetembed/?frameElementId=tradingview_chart&symbol=NSE%3A${stock.symbol}&interval=${timeframe === '1D' ? 'D' : timeframe === '1W' ? 'W' : 'M'}&theme=light&style=1&timezone=Asia%2FKolkata&studies=%5B%5D&timeline=false&showPopupButton=true&popupWidth=1000&popupHeight=650`}
-                        className="w-full h-full border-0"
-                        allowFullScreen
-                      />
-                    </div>
+          <div className="charts-grid">
+            {computedStocks.slice(0, 4).map(stock => (
+              <div className="chart-card" key={stock.symbol}>
+                <div className="chart-header">
+                  <span>{stock.symbol} ({timeframe})</span>
+                  <span className={stock.rawChg >= 0 ? 'text-green' : 'text-red'}>₹{stock.price.toFixed(2)}</span>
+                </div>
+                <div className="chart-body">
+                  <div style={{position: 'absolute', top: '8px', left: '10px', color: '#475569', fontSize: '10px', fontFamily: 'monospace'}}>
+                    Interactive Preview Engine
                   </div>
-                ))}
+                  <div style={{width: '2px', height: '130px', background: '#64748b', position: 'absolute'}}></div>
+                  <div style={{width: '36px', height: '2px', background: '#ffffff', position: 'absolute'}}></div>
+                </div>
               </div>
-            )}
+            ))}
           </div>
         )}
       </div>
